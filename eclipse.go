@@ -2,7 +2,6 @@ package eclipse
 
 import (
 	"fmt"
-	"math/bits"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -99,29 +98,39 @@ const (
 )
 
 func copyCallableToCmd(in input, ct reflect.Type, cv reflect.Value, cmd *cobra.Command) {
-	expNumIn := bits.OnesCount8(uint8(in)) + 1
-	if ct.NumIn() != expNumIn || ct.IsVariadic() || ct.NumOut() != 0 {
-		panic(fmt.Sprintf("want: callable with exactly %v non-variadic inputs and no outputs; got: %v", expNumIn, ct))
+	if ct.IsVariadic() || ct.NumOut() != 0 {
+		panic(fmt.Sprintf("want: callable with non-variadic inputs and no outputs; got: %v", ct))
 	}
-	offset := 0
+	i := 0
 	if in&inputParentFlags != 0 {
-		offset += 1
+		i += 1
 	}
-	flags := ct.In(offset)
-	if flags.Kind() != reflect.Struct {
-		panic(fmt.Sprintf("want: struct; got: %v", flags))
+	flagsIn, argsIn := false, false
+	flagsT := reflect.TypeOf(struct{}{})
+	if i < ct.NumIn() && ct.In(i).Kind() == reflect.Struct {
+		flagsT = ct.In(i)
+		flagsIn = true
+		i += 1
 	}
-	if in&inputArgs != 0 {
-		args := ct.In(offset + 1)
-		if !(args.Kind() == reflect.Slice && args.Elem().Kind() == reflect.String) {
-			panic(fmt.Sprintf("want: slice of strings; got: %v", args))
+	if i < ct.NumIn() && in&inputArgs != 0 {
+		if argsT := ct.In(i); argsT.Kind() == reflect.Slice &&
+			argsT.Elem().Kind() == reflect.String {
+			argsIn = true
+			i += 1
 		}
 	}
+	if i != ct.NumIn() {
+		panic(fmt.Sprintf("want: callable with an optional struct input, "+
+			"followed by an optional slice of strings input; got: %v", ct))
+	}
 	fs := cmd.Flags()
-	defineFlags(fs, flags)
+	defineFlags(fs, flagsT)
 	cmd.Run = func(cmd *cobra.Command, args []string) {
-		inputs := []reflect.Value{flagsAsStruct(fs, flags)}
-		if in&inputArgs != 0 {
+		inputs := []reflect.Value{}
+		if flagsIn {
+			inputs = append(inputs, flagsAsStruct(fs, flagsT))
+		}
+		if argsIn {
 			inputs = append(inputs, reflect.ValueOf(args))
 		}
 		cv.Call(inputs)
