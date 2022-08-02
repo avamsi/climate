@@ -11,10 +11,15 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-func overreact(err error) {
+func check0(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func check1[T any](arg T, err error) T {
+	check0(err)
+	return arg
 }
 
 var (
@@ -37,17 +42,13 @@ func defineFlags(fs *flag.FlagSet, st reflect.Type) {
 		case reflect.Bool:
 			b := false
 			if ok {
-				var err error
-				b, err = strconv.ParseBool(sdefault)
-				overreact(err)
+				b = check1(strconv.ParseBool(sdefault))
 			}
 			fs.Bool(toSnakeCase(sf.Name), b, usage)
 		case reflect.Int:
 			i := 0
 			if ok {
-				var err error
-				i, err = strconv.Atoi(sdefault)
-				overreact(err)
+				i = check1(strconv.Atoi(sdefault))
 			}
 			fs.Int(toSnakeCase(sf.Name), i, usage)
 		case reflect.String:
@@ -66,17 +67,11 @@ func copyFlagsToStruct(fs *flag.FlagSet, st reflect.Type, sv reflect.Value) {
 		sf := st.Field(i)
 		switch sf.Type.Kind() {
 		case reflect.Bool:
-			sfv, err := fs.GetBool(toSnakeCase(sf.Name))
-			overreact(err)
-			sv.Field(i).SetBool(sfv)
+			sv.Field(i).SetBool(check1(fs.GetBool(toSnakeCase(sf.Name))))
 		case reflect.Int:
-			sfv, err := fs.GetInt(toSnakeCase(sf.Name))
-			overreact(err)
-			sv.Field(i).SetInt(int64(sfv))
+			sv.Field(i).SetInt(int64(check1(fs.GetInt(toSnakeCase(sf.Name)))))
 		case reflect.String:
-			sfv, err := fs.GetString(toSnakeCase(sf.Name))
-			overreact(err)
-			sv.Field(i).SetString(sfv)
+			sv.Field(i).SetString(check1(fs.GetString(toSnakeCase(sf.Name))))
 		default:
 			panic(fmt.Sprintf("want: bool|int|string; got: %v", sf))
 		}
@@ -164,9 +159,9 @@ func Execute(i interface{}) {
 	case reflect.Func:
 		cmd := &cobra.Command{Use: toSnakeCase(t.Name())}
 		copyCallableToCmd(inputArgs, t, reflect.ValueOf(i), cmd)
-		overreact(cmd.Execute())
+		check0(cmd.Execute())
 	case reflect.Struct:
-		overreact(structAsCmd(t).Execute())
+		check0(structAsCmd(t).Execute())
 	default:
 		panic(fmt.Sprintf("want: func or struct; got: %v", t))
 	}
