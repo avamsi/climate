@@ -43,13 +43,21 @@ func defineFlags(fs *flag.FlagSet, st reflect.Type) {
 				overreact(err)
 			}
 			fs.Bool(toSnakeCase(sf.Name), b, usage)
+		case reflect.Int:
+			i := 0
+			if ok {
+				var err error
+				i, err = strconv.Atoi(sdefault)
+				overreact(err)
+			}
+			fs.Int(toSnakeCase(sf.Name), i, usage)
 		case reflect.String:
 			if !ok {
 				sdefault = ""
 			}
 			fs.String(toSnakeCase(sf.Name), sdefault, usage)
 		default:
-			panic(fmt.Sprintf("want: bool or string; got: %v", sf))
+			panic(fmt.Sprintf("want: bool|int|string; got: %v", sf))
 		}
 	}
 }
@@ -62,12 +70,16 @@ func copyFlagsToStruct(fs *flag.FlagSet, st reflect.Type, sv reflect.Value) {
 			sfv, err := fs.GetBool(toSnakeCase(sf.Name))
 			overreact(err)
 			sv.Field(i).SetBool(sfv)
+		case reflect.Int:
+			sfv, err := fs.GetInt(toSnakeCase(sf.Name))
+			overreact(err)
+			sv.Field(i).SetInt(int64(sfv))
 		case reflect.String:
 			sfv, err := fs.GetString(toSnakeCase(sf.Name))
 			overreact(err)
 			sv.Field(i).SetString(sfv)
 		default:
-			panic(fmt.Sprintf("want: bool or string; got: %v", sf))
+			panic(fmt.Sprintf("want: bool|int|string; got: %v", sf))
 		}
 	}
 }
