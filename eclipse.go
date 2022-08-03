@@ -7,20 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/avamsi/checks"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
-
-func check0(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-func check1[T any](arg T, err error) T {
-	check0(err)
-	return arg
-}
 
 var (
 	anyUpperLower = regexp.MustCompile("(.)([A-Z][a-z])")
@@ -42,13 +32,13 @@ func defineFlags(fs *flag.FlagSet, st reflect.Type) {
 		case reflect.Bool:
 			b := false
 			if ok {
-				b = check1(strconv.ParseBool(sdefault))
+				b = checks.Check1(strconv.ParseBool(sdefault))
 			}
 			fs.Bool(toSnakeCase(sf.Name), b, usage)
 		case reflect.Int:
 			i := 0
 			if ok {
-				i = check1(strconv.Atoi(sdefault))
+				i = checks.Check1(strconv.Atoi(sdefault))
 			}
 			fs.Int(toSnakeCase(sf.Name), i, usage)
 		case reflect.String:
@@ -67,11 +57,11 @@ func copyFlagsToStruct(fs *flag.FlagSet, st reflect.Type, sv reflect.Value) {
 		sf := st.Field(i)
 		switch sf.Type.Kind() {
 		case reflect.Bool:
-			sv.Field(i).SetBool(check1(fs.GetBool(toSnakeCase(sf.Name))))
+			sv.Field(i).SetBool(checks.Check1(fs.GetBool(toSnakeCase(sf.Name))))
 		case reflect.Int:
-			sv.Field(i).SetInt(int64(check1(fs.GetInt(toSnakeCase(sf.Name)))))
+			sv.Field(i).SetInt(int64(checks.Check1(fs.GetInt(toSnakeCase(sf.Name)))))
 		case reflect.String:
-			sv.Field(i).SetString(check1(fs.GetString(toSnakeCase(sf.Name))))
+			sv.Field(i).SetString(checks.Check1(fs.GetString(toSnakeCase(sf.Name))))
 		default:
 			panic(fmt.Sprintf("want: bool|int|string; got: %v", sf))
 		}
@@ -159,9 +149,9 @@ func Execute(i interface{}) {
 	case reflect.Func:
 		cmd := &cobra.Command{Use: toSnakeCase(t.Name())}
 		copyCallableToCmd(inputArgs, t, reflect.ValueOf(i), cmd)
-		check0(cmd.Execute())
+		checks.Check0(cmd.Execute())
 	case reflect.Struct:
-		check0(structAsCmd(t).Execute())
+		checks.Check0(structAsCmd(t).Execute())
 	default:
 		panic(fmt.Sprintf("want: func or struct; got: %v", t))
 	}
