@@ -23,38 +23,48 @@ func toSnakeCase(s string) string {
 	return strings.ToLower(s)
 }
 
-func defineFlags(fs *flag.FlagSet, st reflect.Type) {
+func declareFlag[T bool | int | string](
+	flagsF func(string, T, string) *T,
+	sf reflect.StructField,
+	strconvF func(string) (T, error),
+) {
+	defaultTag, ok := sf.Tag.Lookup("default")
+	var defaultValue T
+	if ok {
+		defaultValue = checks.Check1(strconvF(defaultTag))
+	}
+	flagsF(toSnakeCase(sf.Name), defaultValue, sf.Tag.Get("usage"))
+}
+
+func validateStructAndDeclareFlags(st reflect.Type, fs *flag.FlagSet, parentSV *reflect.Value) {
 	for i := 0; i < st.NumField(); i++ {
 		sf := st.Field(i)
-		sdefault, ok := sf.Tag.Lookup("default")
-		usage := sf.Tag.Get("usage")
 		switch sf.Type.Kind() {
 		case reflect.Bool:
-			b := false
-			if ok {
-				b = checks.Check1(strconv.ParseBool(sdefault))
-			}
-			fs.Bool(toSnakeCase(sf.Name), b, usage)
+			declareFlag(fs.Bool, sf, strconv.ParseBool)
 		case reflect.Int:
-			i := 0
-			if ok {
-				i = checks.Check1(strconv.Atoi(sdefault))
-			}
-			fs.Int(toSnakeCase(sf.Name), i, usage)
+			declareFlag(fs.Int, sf, strconv.Atoi)
 		case reflect.String:
-			if !ok {
-				sdefault = ""
+			declareFlag(fs.String, sf, func(s string) (string, error) { return s, nil })
+		case reflect.Pointer:
+			if sf.Name != "_" || sf.Type.Elem().Kind() != reflect.Struct {
+				panic(fmt.Sprintf("want: pointer field interpreted as a subcommand "+
+					"to be a struct and be named `_`; got: `%v`", sf))
 			}
-			fs.String(toSnakeCase(sf.Name), sdefault, usage)
+		case reflect.Struct:
+			if sf.Anonymous || sf.Type.Name() != parentSV.Type().Name() {
+				panic(fmt.Sprintf("want: struct field interpreted as the parent command "+
+					"to be of the type `%v` and be named; got: `%v`", parentSV.Type(), sf.Type))
+			}
 		default:
-			panic(fmt.Sprintf("want: bool|int|string; got: %v", sf))
+			panic(fmt.Sprintf("want: bool|int|string; got: `%v`", sf))
 		}
 	}
 }
 
-func copyFlagsToStruct(fs *flag.FlagSet, st reflect.Type, sv reflect.Value) {
-	for i := 0; i < st.NumField(); i++ {
-		sf := st.Field(i)
+func populateStruct(sv reflect.Value, fs *flag.FlagSet, parentSV *reflect.Value) {
+	for i := 0; i < sv.NumField(); i++ {
+		sf := sv.Type().Field(i)
 		switch sf.Type.Kind() {
 		case reflect.Bool:
 			sv.Field(i).SetBool(checks.Check1(fs.GetBool(toSnakeCase(sf.Name))))
@@ -62,32 +72,26 @@ func copyFlagsToStruct(fs *flag.FlagSet, st reflect.Type, sv reflect.Value) {
 			sv.Field(i).SetInt(int64(checks.Check1(fs.GetInt(toSnakeCase(sf.Name)))))
 		case reflect.String:
 			sv.Field(i).SetString(checks.Check1(fs.GetString(toSnakeCase(sf.Name))))
-		default:
-			panic(fmt.Sprintf("want: bool|int|string; got: %v", sf))
+		case reflect.Struct:
+			sv.Field(i).Set(*parentSV)
 		}
 	}
 }
 
-func flagsAsStruct(fs *flag.FlagSet, st reflect.Type) reflect.Value {
-	sv := reflect.New(st).Elem()
-	copyFlagsToStruct(fs, st, sv)
-	return sv
-}
-
-type input uint8
+type inputType uint8
 
 const (
-	inputUnknown input = 1 << iota
+	inputUnknown inputType = 1 << iota
 	inputParentFlags
 	inputArgs
 )
 
-func copyCallableToCmd(in input, ct reflect.Type, cv reflect.Value, cmd *cobra.Command) {
+func copyCallableToCmd(it inputType, ct reflect.Type, cv reflect.Value, cmd *cobra.Command) {
 	if ct.IsVariadic() || ct.NumOut() != 0 {
-		panic(fmt.Sprintf("want: callable with non-variadic inputs and no outputs; got: %v", ct))
+		panic(fmt.Sprintf("want: callable with non-variadic inputs and no outputs; got: `%v`", ct))
 	}
 	i := 0
-	if in&inputParentFlags != 0 {
+	if it&inputParentFlags != 0 {
 		i += 1
 	}
 	flagsIn, argsIn := false, false
@@ -97,7 +101,7 @@ func copyCallableToCmd(in input, ct reflect.Type, cv reflect.Value, cmd *cobra.C
 		flagsIn = true
 		i += 1
 	}
-	if i < ct.NumIn() && in&inputArgs != 0 {
+	if i < ct.NumIn() && it&inputArgs != 0 {
 		if argsT := ct.In(i); argsT.Kind() == reflect.Slice &&
 			argsT.Elem().Kind() == reflect.String {
 			argsIn = true
@@ -106,14 +110,16 @@ func copyCallableToCmd(in input, ct reflect.Type, cv reflect.Value, cmd *cobra.C
 	}
 	if i != ct.NumIn() {
 		panic(fmt.Sprintf("want: callable with an optional struct input, "+
-			"followed by an optional slice of strings input; got: %v", ct))
+			"followed by an optional slice of strings input; got: `%v`", ct))
 	}
 	fs := cmd.Flags()
-	defineFlags(fs, flagsT)
+	validateStructAndDeclareFlags(flagsT, fs, nil)
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		inputs := []reflect.Value{}
 		if flagsIn {
-			inputs = append(inputs, flagsAsStruct(fs, flagsT))
+			sv := reflect.New(flagsT).Elem()
+			populateStruct(sv, fs, nil)
+			inputs = append(inputs, sv)
 		}
 		if argsIn {
 			inputs = append(inputs, reflect.ValueOf(args))
@@ -122,13 +128,23 @@ func copyCallableToCmd(in input, ct reflect.Type, cv reflect.Value, cmd *cobra.C
 	}
 }
 
-func structAsCmd(st reflect.Type) *cobra.Command {
+func structAsCmd(st reflect.Type, parentSV *reflect.Value) *cobra.Command {
 	cmd := &cobra.Command{Use: toSnakeCase(st.Name())}
 	fs := cmd.PersistentFlags()
-	defineFlags(fs, st)
+	validateStructAndDeclareFlags(st, fs, parentSV)
 	sv := reflect.New(st).Elem()
-	cmd.PersistentPreRun = func(*cobra.Command, []string) {
-		copyFlagsToStruct(fs, st, sv)
+	cmd.PersistentPreRun = func(cmd *cobra.Command, _ []string) {
+		if cmd.HasParent() {
+			parentCmd := cmd.Parent()
+			parentCmd.PersistentPreRun(parentCmd, []string{})
+		}
+		populateStruct(sv, fs, parentSV)
+	}
+	for i := 0; i < st.NumField(); i++ {
+		sf := st.Field(i)
+		if sf.Type.Kind() == reflect.Pointer {
+			cmd.AddCommand(structAsCmd(sf.Type.Elem(), &sv))
+		}
 	}
 	for i := 0; i < st.NumMethod(); i++ {
 		m, mv := st.Method(i), sv.Method(i)
@@ -151,8 +167,8 @@ func Execute(i interface{}) {
 		copyCallableToCmd(inputArgs, t, reflect.ValueOf(i), cmd)
 		checks.Check0(cmd.Execute())
 	case reflect.Struct:
-		checks.Check0(structAsCmd(t).Execute())
+		checks.Check0(structAsCmd(t, nil).Execute())
 	default:
-		panic(fmt.Sprintf("want: func or struct; got: %v", t))
+		panic(fmt.Sprintf("want: func or struct; got: `%v`", t))
 	}
 }
