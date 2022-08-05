@@ -78,17 +78,17 @@ func populateStruct(sv reflect.Value, fs *flag.FlagSet, parentSV *reflect.Value)
 	}
 }
 
-type inputType uint8
+type inputs uint8
 
 const (
-	inputUnknown inputType = 1 << iota
+	inputUnknown inputs = 1 << iota
 	inputParentFlags
 	inputArgs
 )
 
-func copyCallableToCmd(it inputType, ct reflect.Type, cv reflect.Value, cmd *cobra.Command) {
-	if ct.IsVariadic() || ct.NumOut() != 0 {
-		panic(fmt.Sprintf("want: callable with non-variadic inputs and no outputs; got: `%v`", ct))
+func copyCallableToCmd(it inputs, ct reflect.Type, cv reflect.Value, cmd *cobra.Command) {
+	if ct.IsVariadic() {
+		panic(fmt.Sprintf("want: callable with non-variadic inputs; got: `%v`", ct))
 	}
 	i := 0
 	if it&inputParentFlags != 0 {
@@ -114,7 +114,7 @@ func copyCallableToCmd(it inputType, ct reflect.Type, cv reflect.Value, cmd *cob
 	}
 	fs := cmd.Flags()
 	validateStructAndDeclareFlags(flagsT, fs, nil)
-	cmd.Run = func(cmd *cobra.Command, args []string) {
+	cmd.Run = func(_ *cobra.Command, args []string) {
 		inputs := []reflect.Value{}
 		if flagsIn {
 			sv := reflect.New(flagsT).Elem()
@@ -124,7 +124,19 @@ func copyCallableToCmd(it inputType, ct reflect.Type, cv reflect.Value, cmd *cob
 		if argsIn {
 			inputs = append(inputs, reflect.ValueOf(args))
 		}
-		cv.Call(inputs)
+		outs := cv.Call(inputs)
+		n := len(outs)
+		if n > 0 {
+			if err, ok := outs[len(outs)-1].Interface().(error); ok {
+				n -= 1
+				if err != nil {
+					panic(err)
+				}
+			}
+			for i := 0; i < n; i++ {
+				fmt.Println(outs[i].String())
+			}
+		}
 	}
 }
 
