@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/avamsi/checks"
+	"github.com/avamsi/ergo"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -31,7 +31,7 @@ func declareFlag[T bool | int | string](
 	defaultTag, ok := sf.Tag.Lookup("default")
 	var defaultValue T
 	if ok {
-		defaultValue = checks.Check1(strconvF(defaultTag))
+		defaultValue = ergo.Check1(strconvF(defaultTag))
 	}
 	flagsF(toSnakeCase(sf.Name), defaultValue, sf.Tag.Get("usage"))
 }
@@ -67,11 +67,11 @@ func populateStruct(sv reflect.Value, fs *flag.FlagSet, parentSV *reflect.Value)
 		sf := sv.Type().Field(i)
 		switch sf.Type.Kind() {
 		case reflect.Bool:
-			sv.Field(i).SetBool(checks.Check1(fs.GetBool(toSnakeCase(sf.Name))))
+			sv.Field(i).SetBool(ergo.Check1(fs.GetBool(toSnakeCase(sf.Name))))
 		case reflect.Int:
-			sv.Field(i).SetInt(int64(checks.Check1(fs.GetInt(toSnakeCase(sf.Name)))))
+			sv.Field(i).SetInt(int64(ergo.Check1(fs.GetInt(toSnakeCase(sf.Name)))))
 		case reflect.String:
-			sv.Field(i).SetString(checks.Check1(fs.GetString(toSnakeCase(sf.Name))))
+			sv.Field(i).SetString(ergo.Check1(fs.GetString(toSnakeCase(sf.Name))))
 		case reflect.Struct:
 			sv.Field(i).Set(*parentSV)
 		}
@@ -177,9 +177,9 @@ func Execute(i interface{}) {
 	case reflect.Func:
 		cmd := &cobra.Command{Use: toSnakeCase(t.Name())}
 		copyCallableToCmd(inputArgs, t, reflect.ValueOf(i), cmd)
-		checks.Check0(cmd.Execute())
+		ergo.Check0(cmd.Execute())
 	case reflect.Struct:
-		checks.Check0(structAsCmd(t, nil).Execute())
+		ergo.Check0(structAsCmd(t, nil).Execute())
 	default:
 		panic(fmt.Sprintf("want: func or struct; got: `%v`", t))
 	}
