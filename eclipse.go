@@ -1,186 +1,45 @@
 package eclipse
 
 import (
-	"fmt"
+	"encoding/base64"
+	"encoding/json"
+	"log"
 	"reflect"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/avamsi/ergo"
 	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
 )
 
-var (
-	anyUpperLower = regexp.MustCompile("(.)([A-Z][a-z])")
-	lowerUpper    = regexp.MustCompile("([a-z])([A-Z])")
-)
+var docs map[string]string
 
-func toSnakeCase(s string) string {
-	s = anyUpperLower.ReplaceAllString(s, "${1}_${2}")
-	s = lowerUpper.ReplaceAllString(s, "${1}_${2}")
-	return strings.ToLower(s)
+func longAndShortDocsFor(s string) (long, short string) {
+	long, short = docs[s], docs[s]
+	i := strings.Index(long, "\n\n")
+	if i != -1 {
+		short = long[:i]
+	}
+	return long, short
 }
 
-func declareFlag[T bool | int | string](
-	flagsF func(string, T, string) *T,
-	sf reflect.StructField,
-	strconvF func(string) (T, error),
-) {
-	defaultTag, ok := sf.Tag.Lookup("default")
-	var defaultValue T
-	if ok {
-		defaultValue = ergo.Check1(strconvF(defaultTag))
+func Execute(args ...any) {
+	if rawDocs, ok := args[0].(string); ok {
+		ergo.Check0(json.Unmarshal(ergo.Check1(base64.StdEncoding.DecodeString(rawDocs)), &docs))
+		args = args[1:]
 	}
-	flagsF(toSnakeCase(sf.Name), defaultValue, sf.Tag.Get("usage"))
-}
-
-func validateStructAndDeclareFlags(st reflect.Type, fs *flag.FlagSet, parentSV *reflect.Value) {
-	for i := 0; i < st.NumField(); i++ {
-		sf := st.Field(i)
-		switch sf.Type.Kind() {
-		case reflect.Bool:
-			declareFlag(fs.Bool, sf, strconv.ParseBool)
-		case reflect.Int:
-			declareFlag(fs.Int, sf, strconv.Atoi)
-		case reflect.String:
-			declareFlag(fs.String, sf, func(s string) (string, error) { return s, nil })
-		case reflect.Pointer:
-			if sf.Name != "_" || sf.Type.Elem().Kind() != reflect.Struct {
-				panic(fmt.Sprintf("want: pointer field interpreted as a subcommand "+
-					"to be a struct and be named `_`; got: `%v`", sf))
-			}
-		case reflect.Struct:
-			if sf.Anonymous || sf.Type.Name() != parentSV.Type().Name() {
-				panic(fmt.Sprintf("want: struct field interpreted as the parent command "+
-					"to be of the type `%v` and be named; got: `%v`", parentSV.Type(), sf.Type))
-			}
-		default:
-			panic(fmt.Sprintf("want: bool|int|string; got: `%v`", sf))
-		}
+	cobraCmds := []*cobra.Command{}
+	for _, arg := range args {
+		cmd := typeToCommand(reflect.TypeOf(arg))
+		cobraCmds = append(cobraCmds, cmd.cobraCmd)
 	}
-}
-
-func populateStruct(sv reflect.Value, fs *flag.FlagSet, parentSV *reflect.Value) {
-	for i := 0; i < sv.NumField(); i++ {
-		sf := sv.Type().Field(i)
-		switch sf.Type.Kind() {
-		case reflect.Bool:
-			sv.Field(i).SetBool(ergo.Check1(fs.GetBool(toSnakeCase(sf.Name))))
-		case reflect.Int:
-			sv.Field(i).SetInt(int64(ergo.Check1(fs.GetInt(toSnakeCase(sf.Name)))))
-		case reflect.String:
-			sv.Field(i).SetString(ergo.Check1(fs.GetString(toSnakeCase(sf.Name))))
-		case reflect.Struct:
-			sv.Field(i).Set(*parentSV)
-		}
+	rootCobraCmds := map[*cobra.Command]bool{}
+	for _, cobraCmd := range cobraCmds {
+		rootCobraCmds[cobraCmd.Root()] = true
 	}
-}
-
-type inputs uint8
-
-const (
-	inputUnknown inputs = 1 << iota
-	inputParentFlags
-	inputArgs
-)
-
-func copyCallableToCmd(it inputs, ct reflect.Type, cv reflect.Value, cmd *cobra.Command) {
-	if ct.IsVariadic() {
-		panic(fmt.Sprintf("want: callable with non-variadic inputs; got: `%v`", ct))
+	if len(rootCobraCmds) != 1 {
+		log.Fatalf("want: exactly one root command; got: '%#v'", rootCobraCmds)
 	}
-	i := 0
-	if it&inputParentFlags != 0 {
-		i += 1
-	}
-	flagsIn, argsIn := false, false
-	flagsT := reflect.TypeOf(struct{}{})
-	if i < ct.NumIn() && ct.In(i).Kind() == reflect.Struct {
-		flagsT = ct.In(i)
-		flagsIn = true
-		i += 1
-	}
-	if i < ct.NumIn() && it&inputArgs != 0 {
-		if argsT := ct.In(i); argsT.Kind() == reflect.Slice &&
-			argsT.Elem().Kind() == reflect.String {
-			argsIn = true
-			i += 1
-		}
-	}
-	if i != ct.NumIn() {
-		panic(fmt.Sprintf("want: callable with an optional struct input, "+
-			"followed by an optional slice of strings input; got: `%v`", ct))
-	}
-	fs := cmd.Flags()
-	validateStructAndDeclareFlags(flagsT, fs, nil)
-	cmd.Run = func(_ *cobra.Command, args []string) {
-		inputs := []reflect.Value{}
-		if flagsIn {
-			sv := reflect.New(flagsT).Elem()
-			populateStruct(sv, fs, nil)
-			inputs = append(inputs, sv)
-		}
-		if argsIn {
-			inputs = append(inputs, reflect.ValueOf(args))
-		}
-		outs := cv.Call(inputs)
-		n := len(outs)
-		if n > 0 {
-			if err, ok := outs[len(outs)-1].Interface().(error); ok {
-				n -= 1
-				if err != nil {
-					panic(err)
-				}
-			}
-			for i := 0; i < n; i++ {
-				fmt.Println(outs[i].String())
-			}
-		}
-	}
-}
-
-func structAsCmd(st reflect.Type, parentSV *reflect.Value) *cobra.Command {
-	cmd := &cobra.Command{Use: toSnakeCase(st.Name())}
-	fs := cmd.PersistentFlags()
-	validateStructAndDeclareFlags(st, fs, parentSV)
-	sv := reflect.New(st).Elem()
-	cmd.PersistentPreRun = func(cmd *cobra.Command, _ []string) {
-		if cmd.HasParent() {
-			parentCmd := cmd.Parent()
-			parentCmd.PersistentPreRun(parentCmd, []string{})
-		}
-		populateStruct(sv, fs, parentSV)
-	}
-	for i := 0; i < st.NumField(); i++ {
-		sf := st.Field(i)
-		if sf.Type.Kind() == reflect.Pointer {
-			cmd.AddCommand(structAsCmd(sf.Type.Elem(), &sv))
-		}
-	}
-	for i := 0; i < st.NumMethod(); i++ {
-		m, mv := st.Method(i), sv.Method(i)
-		if m.Name == "Execute" {
-			copyCallableToCmd(inputParentFlags, m.Type, mv, cmd)
-		} else {
-			subCmd := &cobra.Command{Use: toSnakeCase(m.Name)}
-			copyCallableToCmd(inputParentFlags|inputArgs, m.Type, mv, subCmd)
-			cmd.AddCommand(subCmd)
-		}
-	}
-	return cmd
-}
-
-func Execute(i interface{}) {
-	t := reflect.TypeOf(i)
-	switch t.Kind() {
-	case reflect.Func:
-		cmd := &cobra.Command{Use: toSnakeCase(t.Name())}
-		copyCallableToCmd(inputArgs, t, reflect.ValueOf(i), cmd)
-		ergo.Check0(cmd.Execute())
-	case reflect.Struct:
-		ergo.Check0(structAsCmd(t, nil).Execute())
-	default:
-		panic(fmt.Sprintf("want: func or struct; got: `%v`", t))
+	for rootCobraCmd := range rootCobraCmds {
+		rootCobraCmd.Execute()
 	}
 }

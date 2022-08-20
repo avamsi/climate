@@ -1,13 +1,11 @@
 package main
 
-import (
-	"fmt"
+import "fmt"
 
-	"github.com/avamsi/eclipse"
-)
-
+//go:generate eclipse --cmd=Bazel
 type Bazel struct {
-	Strip string `default:"always" usage:"(always|never|sometimes)"`
+	// (always|never|sometimes)
+	Strip string `default:"always"`
 	_     *Mobile
 }
 
@@ -21,6 +19,7 @@ func (bzl Bazel) Build(flags struct {
 	fmt.Println("Bazel.Build", bzl, flags, args)
 }
 
+//go:generate eclipse --cmd=Mobile
 type Mobile struct {
 	Bzl Bazel
 }
@@ -31,8 +30,4 @@ func (m Mobile) Install() {
 
 func (m Mobile) Uninstall() {
 	fmt.Println("Mobile.Uninstall", m)
-}
-
-func main() {
-	eclipse.Execute(Bazel{})
 }
