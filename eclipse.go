@@ -1,8 +1,8 @@
 package eclipse
 
 import (
-	"encoding/base64"
-	"encoding/json"
+	"bytes"
+	"encoding/gob"
 	"log"
 	"reflect"
 	"strings"
@@ -23,8 +23,8 @@ func longAndShortDocsFor(s string) (long, short string) {
 }
 
 func Execute(args ...any) {
-	if rawDocs, ok := args[0].(string); ok {
-		ergo.Check0(json.Unmarshal(ergo.Check1(base64.StdEncoding.DecodeString(rawDocs)), &docs))
+	if rawDocs, ok := args[0].([]byte); ok {
+		ergo.Check0(gob.NewDecoder(bytes.NewBuffer(rawDocs)).Decode(&docs))
 		args = args[1:]
 	}
 	cobraCmds := []*cobra.Command{}

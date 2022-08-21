@@ -67,6 +67,9 @@ func copyMethodToCobraCmd(m reflect.Method, s reflect.Value, cobraCmd *cobra.Com
 	optsT, argsIn := parseMethod(m)
 	var opts *options
 	if optsT != nil {
+		if (*optsT).Name() != "" {
+			parentID = (*optsT).PkgPath() + "." + (*optsT).Name()
+		}
 		opts = newOptions(*optsT, cobraCmd.Flags(), parentID)
 	}
 	cobraCmd.Run = func(_ *cobra.Command, args []string) {
