@@ -82,17 +82,16 @@ func copyMethodToCobraCmd(m reflect.Method, s reflect.Value, cobraCmd *cobra.Com
 		}
 		inputs = append(inputs, reflect.ValueOf(args))
 		outs := m.Func.Call(inputs[:m.Type.NumIn()])
-		n := len(outs)
-		if n > 0 {
-			for i := 0; i < n-1; i++ {
-				fmt.Println(outs[i].String())
+		if n := len(outs); n > 0 {
+			var err error
+			if m.Type.Out(n - 1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+				outs, err = outs[:n-1], outs[n-1].Interface().(error)
 			}
-			if err, ok := outs[n-1].Interface().(error); ok {
-				if err != nil {
-					log.Println(err)
-				}
-			} else {
-				fmt.Println(outs[n-1].String())
+			for _, out := range outs {
+				fmt.Println(out.String())
+			}
+			if err != nil {
+				log.Println(err)
 			}
 		}
 	}
