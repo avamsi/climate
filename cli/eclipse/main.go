@@ -28,7 +28,7 @@ func onlyElement[T any](s []T) T {
 func importPath(dir string) string {
 	cmd := exec.Command("go", "list")
 	cmd.Dir = dir
-	return strings.TrimSpace(string(ergo.Check1(cmd.Output())))
+	return strings.TrimSpace(string(ergo.Must1(cmd.Output())))
 }
 
 func docFromField(field *ast.Field) string {
@@ -50,7 +50,7 @@ func populateDocsForStructType(parentID string, t ast.Expr, docs map[string]stri
 }
 
 func populateDocs(dir string, docs map[string]string) {
-	pkgs := ergo.Check1(parser.ParseDir(token.NewFileSet(), dir, nil, parser.ParseComments))
+	pkgs := ergo.Must1(parser.ParseDir(token.NewFileSet(), dir, nil, parser.ParseComments))
 	if len(pkgs) == 0 {
 		return
 	}
@@ -78,18 +78,18 @@ type Eclipse struct{}
 
 func (Eclipse) Docs(opts struct{ Out string }) {
 	docs := map[string]string{}
-	cwd := ergo.Check1(os.Getwd())
+	cwd := ergo.Must1(os.Getwd())
 	populateDocs(cwd, docs)
 	filepath.WalkDir(cwd, func(path string, d fs.DirEntry, err error) error {
-		ergo.Check0(err)
+		ergo.Must0(err)
 		if d.IsDir() {
 			populateDocs(path, docs)
 		}
 		return nil
 	})
-	file := ergo.Check1(os.OpenFile(opts.Out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644))
+	file := ergo.Must1(os.OpenFile(opts.Out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644))
 	defer file.Close()
-	ergo.Check0(gob.NewEncoder(file).Encode(docs))
+	ergo.Must0(gob.NewEncoder(file).Encode(docs))
 }
 
 func main() {

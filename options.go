@@ -52,7 +52,7 @@ func flagVar[T bool | int64 | string](
 	defaultTag, ok := sf.Tag.Lookup("default")
 	var defaultValue T
 	if ok {
-		defaultValue = ergo.Check1(strconvF(defaultTag))
+		defaultValue = ergo.Must1(strconvF(defaultTag))
 	}
 	ptr := (*T)(fv.Addr().UnsafePointer())
 	// TODO: consider adding support for shorthand flags.

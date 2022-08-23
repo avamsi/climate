@@ -24,7 +24,7 @@ func longAndShortDocsFor(s string) (long, short string) {
 
 func Execute(args ...any) {
 	if rawDocs, ok := args[0].([]byte); ok {
-		ergo.Check0(gob.NewDecoder(bytes.NewBuffer(rawDocs)).Decode(&docs))
+		ergo.Must0(gob.NewDecoder(bytes.NewBuffer(rawDocs)).Decode(&docs))
 		args = args[1:]
 	}
 	cobraCmds := []*cobra.Command{}
