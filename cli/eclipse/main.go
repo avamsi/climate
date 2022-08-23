@@ -19,8 +19,8 @@ import (
 )
 
 func onlyElement[T any](s []T) T {
-	if l := len(s); l != 1 {
-		log.Panicf("want: exactly 1 element; got: %d", l)
+	if len(s) != 1 {
+		log.Panicf("want: exactly 1 element; got: '%#v'", s)
 	}
 	return s[0]
 }
@@ -39,27 +39,36 @@ func docFromField(field *ast.Field) string {
 	return doc
 }
 
+func populateDocsForStructType(parentID string, t ast.Expr, docs map[string]string) {
+	if st, ok := t.(*ast.StructType); ok {
+		for _, field := range st.Fields.List {
+			for _, name := range field.Names {
+				docs[parentID+"."+name.Name] = docFromField(field)
+			}
+		}
+	}
+}
+
 func populateDocs(dir string, docs map[string]string) {
-	pkg := onlyElement(maps.Values(ergo.Check1(parser.ParseDir(token.NewFileSet(), dir, nil, parser.ParseComments))))
+	pkgs := ergo.Check1(parser.ParseDir(token.NewFileSet(), dir, nil, parser.ParseComments))
+	if len(pkgs) == 0 {
+		return
+	}
+	pkg := onlyElement(maps.Values(pkgs))
 	pkgPath := "main"
 	if pkg.Name != "main" {
 		pkgPath = importPath(dir)
 	}
-	for _, tipe := range doc.New(pkg, "TODO", doc.AllDecls).Types {
-		parentID := pkgPath + "." + tipe.Name
-		docs[parentID] = strings.TrimSpace(tipe.Doc)
-		for _, field := range onlyElement(tipe.Decl.Specs).(*ast.TypeSpec).Type.(*ast.StructType).Fields.List {
-			docs[parentID+"."+onlyElement(field.Names).Name] = docFromField(field)
-		}
-		for _, method := range tipe.Methods {
+	for _, docDotType := range doc.New(pkg, "TODO", doc.AllDecls).Types {
+		parentID := pkgPath + "." + docDotType.Name
+		docs[parentID] = strings.TrimSpace(docDotType.Doc)
+		astDotType := onlyElement(docDotType.Decl.Specs).(*ast.TypeSpec).Type
+		populateDocsForStructType(parentID, astDotType, docs)
+		for _, method := range docDotType.Methods {
 			parentID := parentID + "." + method.Name
 			docs[parentID] = strings.TrimSpace(method.Doc)
 			for _, param := range method.Decl.Type.Params.List {
-				if paramType, ok := param.Type.(*ast.StructType); ok {
-					for _, field := range paramType.Fields.List {
-						docs[parentID+"."+onlyElement(field.Names).Name] = docFromField(field)
-					}
-				}
+				populateDocsForStructType(parentID, param.Type, docs)
 			}
 		}
 	}
