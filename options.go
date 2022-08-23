@@ -42,7 +42,7 @@ func newOptions(t reflect.Type, fs *flag.FlagSet, parentID string) *options {
 	return opts
 }
 
-func flagVar[T bool | int | string](
+func flagVar[T bool | int64 | string](
 	flagTVar func(*T, string, T, string),
 	fv reflect.Value,
 	sf reflect.StructField,
@@ -65,11 +65,14 @@ func (opts *options) declareFlags(fs *flag.FlagSet, parentID string) {
 		switch sf.Type.Kind() {
 		case reflect.Bool:
 			flagVar(fs.BoolVar, fv, sf, strconv.ParseBool, parentID)
-		case reflect.Int:
-			flagVar(fs.IntVar, fv, sf, strconv.Atoi, parentID)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			s2i64 := func(s string) (int64, error) {
+				return strconv.ParseInt(s, 10, 64)
+			}
+			flagVar(fs.Int64Var, fv, sf, s2i64, parentID)
 		case reflect.String:
-			identityF := func(s string) (string, error) { return s, nil }
-			flagVar(fs.StringVar, fv, sf, identityF, parentID)
+			s2s := func(s string) (string, error) { return s, nil }
+			flagVar(fs.StringVar, fv, sf, s2s, parentID)
 		case reflect.Struct:
 			if opts.parentIndex != -1 {
 				log.Fatalf("want: exactly one struct field; got: '%#v'", opts.t)
