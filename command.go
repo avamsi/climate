@@ -85,7 +85,8 @@ func copyMethodToCobraCmd(m reflect.Method, s reflect.Value, cobraCmd *cobra.Com
 		if n := len(outs); n > 0 {
 			var err error
 			if m.Type.Out(n - 1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
-				outs, err = outs[:n-1], outs[n-1].Interface().(error)
+				err, _ = outs[n-1].Interface().(error)
+				outs = outs[:n-1]
 			}
 			for _, out := range outs {
 				fmt.Println(out.String())
