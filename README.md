@@ -1,6 +1,6 @@
 # Eclipse
 
-Eclipse aims to make creating CLIs in Go easy (and fun!), similar to [python-fire](github.com/google/python-fire).
+Eclipse aims to make creating CLIs in Go easy (and fun!), similar to [python-fire](https://github.com/google/python-fire).
 
 ## Usage
 
@@ -29,7 +29,7 @@ func (Cobra) Add() {
 }
 ```
 
-Eclipse is built on top of [Cobra](github.com/spf13/cobra) (and through it), autogenerates completion and help commands for you --
+Eclipse is built on top of [Cobra](https://github.com/spf13/cobra) (and through it), autogenerates completion and help commands for you --
 
 ```
 $ cobra --help
@@ -125,7 +125,8 @@ Global Flags:
 
 ### Subcommand-ception
 
-To create more "parent" commands (i.e., commands with subcommands, like the root command), you just make them a struct with the root command or some other parent command as one of the fields. For example --
+To create more "parent" commands (i.e., commands with subcommands, like the root command),
+you just make them a struct with the root command or some other parent command as one of the fields. For example --
 
 ```go
 type Cobra struct {
