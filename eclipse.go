@@ -19,6 +19,10 @@ func longAndShortDocsFor(s string) (long, short string) {
 	if i != -1 {
 		short = long[:i]
 	}
+	short = strings.Join(strings.Fields(short), " ")
+	if len(short) > 80 {
+		short = short[:77] + "..."
+	}
 	return long, short
 }
 

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"github.com/avamsi/ergo"
 
@@ -42,44 +43,57 @@ func newOptions(t reflect.Type, fs *flag.FlagSet, parentID string) *options {
 	return opts
 }
 
-func flagVar[T bool | int64 | string](
-	flagTVar func(*T, string, T, string),
-	fv reflect.Value,
-	sf reflect.StructField,
-	strconvF func(string) (T, error),
-	parentID string,
-) {
-	defaultTag, ok := sf.Tag.Lookup("default")
+type flagVarOpts[T any] struct {
+	flagTVar func(*T, string, T, string)
+	ptr      unsafe.Pointer
+	sf       reflect.StructField
+	s2t      func(string) (T, error)
+	usage    string
+}
+
+func flagVar[T any](opts flagVarOpts[T]) {
+	defaultTag, ok := opts.sf.Tag.Lookup("default")
 	var defaultValue T
 	if ok {
-		defaultValue = ergo.Must1(strconvF(defaultTag))
+		defaultValue = ergo.Must1(opts.s2t(defaultTag))
 	}
-	ptr := (*T)(fv.Addr().UnsafePointer())
 	// TODO: consider adding support for shorthand flags.
-	flagTVar(ptr, toKebabCase(sf.Name), defaultValue, docs[parentID+"."+sf.Name])
+	opts.flagTVar((*T)(opts.ptr), toKebabCase(opts.sf.Name), defaultValue, opts.usage)
 }
 
 func (opts *options) declareFlags(fs *flag.FlagSet, parentID string) {
 	for i := 0; i < opts.t.NumField(); i++ {
-		sf, fv := opts.t.Field(i), opts.v.Field(i)
+		ptr := opts.v.Field(i).Addr().UnsafePointer()
+		sf := opts.t.Field(i)
+		usage := docs[parentID+"."+sf.Name]
 		switch sf.Type.Kind() {
 		case reflect.Bool:
-			flagVar(fs.BoolVar, fv, sf, strconv.ParseBool, parentID)
+			flagVar(flagVarOpts[bool]{fs.BoolVar, ptr, sf, strconv.ParseBool, usage})
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			s2i64 := func(s string) (int64, error) {
 				return strconv.ParseInt(s, 10, 64)
 			}
-			flagVar(fs.Int64Var, fv, sf, s2i64, parentID)
+			flagVar(flagVarOpts[int64]{fs.Int64Var, ptr, sf, s2i64, usage})
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			s2u64 := func(s string) (uint64, error) {
+				return strconv.ParseUint(s, 10, 64)
+			}
+			flagVar(flagVarOpts[uint64]{fs.Uint64Var, ptr, sf, s2u64, usage})
+		case reflect.Float32, reflect.Float64:
+			s2f64 := func(s string) (float64, error) {
+				return strconv.ParseFloat(s, 64)
+			}
+			flagVar(flagVarOpts[float64]{fs.Float64Var, ptr, sf, s2f64, usage})
 		case reflect.String:
 			s2s := func(s string) (string, error) { return s, nil }
-			flagVar(fs.StringVar, fv, sf, s2s, parentID)
+			flagVar(flagVarOpts[string]{fs.StringVar, ptr, sf, s2s, usage})
 		case reflect.Struct:
 			if opts.parentIndex != -1 {
 				log.Fatalf("want: exactly one struct field; got: '%#v'", opts.t)
 			}
 			opts.parentIndex = i
 		default:
-			log.Fatalf("want: bool|int|string fields; got: '%#v'", sf)
+			log.Fatalf("want: bool|int|uint|float|string fields; got: '%#v'", sf)
 		}
 	}
 }
