@@ -1,14 +1,17 @@
 # Eclipse
 
-Eclipse aims to creating CLIs in Go easy (and fun!), similar to [python-fire](github.com/google/python-fire).
+Eclipse aims to make creating CLIs in Go easy (and fun!), similar to [python-fire](github.com/google/python-fire).
 
 ## Usage
 
-If you want to skip the incremental introduction and see a complete working example, jump to the [tl;dr](#tldr) section below.
+If you want to skip the incremental introduction and would instead prefer seeing working code for a full feature demo,
+jump to the [tl;dr](#tldr) section below.
 
 ### Commands
 
-To create a command, all you need to do is create a struct. To make the "root" command itself runnable, you just add an `Execute` method. And to add subcommands, you just add more exported methods --
+With Eclipse, to create a command, all you need to do is create a struct (and then pass it to `eclipse.Execute`).
+To make the "root" command itself runnable, you just add an `Execute` (note that it's exported) method to the struct.
+And to add subcommands, you just add more exported methods to the struct --
 
 ```go
 type Cobra struct{}
@@ -26,7 +29,7 @@ func (Cobra) Add() {
 }
 ```
 
-Eclipse is built on top of [Cobra](github.com/spf13/cobra) and with its help, autogenerates completion and help commands for you --
+Eclipse is built on top of [Cobra](github.com/spf13/cobra) (and through it), autogenerates completion and help commands for you --
 
 ```
 $ cobra --help
@@ -49,9 +52,12 @@ Use "cobra [command] --help" for more information about a command.
 
 ### Flags
 
-Eclipse also makes adding flags easy. To add "global" flags (i.e., something that's applicable for all the commands i.e., the "root" command and all subcommands), you just add exported value fields to the struct.
+Eclipse also makes adding flags easy.
+To add "global" flags (i.e., something that's applicable for all the commands i.e., the "root" command and all subcommands),
+you just add exported value fields to the struct.
 
-To add "local" flags (i.e., something that's applicable only for a single command), you just create a (potentially anonymous) struct (again, with exported value fields) and add it as a param to the respective method.
+To add "local" flags (i.e., something that's only applicable for a single command),
+you just create a (potentially anonymous) struct (again, with exported value fields) and add it as a param to the respective method.
 
 This would look something like --
 
@@ -137,16 +143,20 @@ func (p Pretend) Init() {
 }
 ```
 
-### tl;dr
+### Default values, shorthands and docs
 
-Eclipse also supports setting default values and shorthands for flags through struct tags and is able to autogenerate help documentation from Godocs if you're willing to go an extra mile (you'll need to install the Eclipse CLI and run `go generate ./...` on any Godoc changes).
+Eclipse also supports setting default values and shorthands for flags through respective struct tags and
+is able to autogenerate help documentation from Godocs if you're willing to suffer an extra step
+(you'll need to install the Eclipse CLI and run `go generate ./...` on any Godoc changes).
 
 ``` shell
 $ go install github.com/avamsi/eclipse/cli/eclipse@latest
 $ go generate ./...
 ```
 
-Here's a complete working example --
+### tl;dr
+
+Here's the code for a full feature demo --
 
 ```go
 package main
