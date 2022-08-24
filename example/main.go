@@ -8,31 +8,52 @@ import (
 	"github.com/avamsi/eclipse"
 )
 
-type Bazel struct {
-	// (always|never|sometimes)
-	Strip string `default:"always"`
+// Cobra is a CLI library for Go that empowers applications.
+// This application is a tool to generate the needed files
+// to quickly create a Cobra application.
+//
+// Usage: cobra [command]
+type Cobra struct {
+	// author name for copyright attribution
+	Author string `short:"a" default:"YOUR NAME"`
+	Config string `default:"$HOME/.cobra.yaml"` // config file
+	// name of license for the project
+	License string `short:"l"`
 }
 
-func (bzl Bazel) Execute() {
-	fmt.Println("Bazel", bzl)
+type AddOpts struct {
+	// variable name of parent command for this command
+	Parent string `short:"p" default:"rootCmd"`
 }
 
-func (bzl Bazel) Build(flags struct {
-	CPU string
-}, args []string) {
-	fmt.Println("Bazel.Build", bzl, flags, args)
+// Add (cobra add) will create a new command, with a license and
+// the appropriate structure for a Cobra-based CLI application,
+// and register it to its parent (default rootCmd).
+//
+// If you want your command to be public, pass in the command name
+// with an initial uppercase letter.
+//
+// Example: cobra add server -> resulting in a new cmd/server.go
+//
+// Short: Add a command to a Cobra Application
+// Usage: add [command name]
+func (c Cobra) Add(opts AddOpts, args []string) {
+	fmt.Println("cobra add", c, opts, args)
 }
 
-type Mobile struct {
-	Bzl Bazel
+type Pretend struct {
+	C Cobra
 }
 
-func (m Mobile) Install() {
-	fmt.Println("Mobile.Install", m)
-}
-
-func (m Mobile) Uninstall() {
-	fmt.Println("Mobile.Uninstall", m)
+// Initialize (cobra init) will create a new application, with a license
+// and the appropriate structure for a Cobra-based CLI application.
+//
+// Cobra init must be run inside of a go module (please run "go mod init <MODNAME>" first)
+//
+// Short: Initialize a Cobra Application
+// Usage: init [path] [flags]
+func (p Pretend) Init() {
+	fmt.Println("cobra pretend init", p)
 }
 
 //go:generate eclipse docs --out=eclipse.docs
@@ -40,5 +61,5 @@ func (m Mobile) Uninstall() {
 var docs []byte
 
 func main() {
-	eclipse.Execute(docs, Bazel{}, Mobile{})
+	eclipse.Execute(docs, Cobra{}, Pretend{})
 }

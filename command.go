@@ -106,8 +106,11 @@ func typeToCommand(t reflect.Type) *command {
 		return cmd
 	}
 	parentID := t.PkgPath() + "." + t.Name()
-	long, short := longAndShortDocsFor(parentID)
-	cobraCmd := &cobra.Command{Use: strings.ToLower(t.Name()), Long: long, Short: short}
+	long, short, usage := parsedCmdDocFor(parentID)
+	if usage == "" {
+		usage = strings.ToLower(t.Name())
+	}
+	cobraCmd := &cobra.Command{Use: usage, Long: long, Short: short}
 	opts := newOptions(t, cobraCmd.PersistentFlags(), parentID)
 	cmd := &command{opts, cobraCmd}
 	reg.put(cmd)
@@ -121,8 +124,11 @@ func typeToCommand(t reflect.Type) *command {
 		tmpCobraCmd := cobraCmd
 		parentID := parentID + "." + m.Name
 		if m.Name != "Execute" {
-			long, short := longAndShortDocsFor(parentID)
-			tmpCobraCmd = &cobra.Command{Use: strings.ToLower(m.Name), Long: long, Short: short}
+			long, short, usage := parsedCmdDocFor(parentID)
+			if usage == "" {
+				usage = strings.ToLower(m.Name)
+			}
+			tmpCobraCmd = &cobra.Command{Use: usage, Long: long, Short: short}
 			cobraCmd.AddCommand(tmpCobraCmd)
 		}
 		copyMethodToCobraCmd(m, opts.v, tmpCobraCmd, parentID)

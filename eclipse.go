@@ -13,17 +13,34 @@ import (
 
 var docs map[string]string
 
-func longAndShortDocsFor(s string) (long, short string) {
-	long, short = docs[s], docs[s]
-	i := strings.Index(long, "\n\n")
-	if i != -1 {
-		short = long[:i]
+func parsedCmdDocFor(s string) (long, short, usage string) {
+	lines := []string{}
+	for _, l := range strings.Split(docs[s], "\n") {
+		if strings.HasPrefix(l, "Short: ") {
+			if short != "" {
+				panic("TODO")
+			}
+			short = strings.TrimPrefix(l, "Short: ")
+		} else if strings.HasPrefix(l, "Usage: ") {
+			if usage != "" {
+				panic("TODO")
+			}
+			usage = strings.TrimPrefix(l, "Usage: ")
+		} else {
+			lines = append(lines, l)
+		}
 	}
-	short = strings.Join(strings.Fields(short), " ")
-	if len(short) > 80 {
-		short = short[:77] + "..."
+	if short == "" {
+		i := strings.Index(long, "\n\n")
+		if i != -1 {
+			short = long[:i]
+		}
+		short = strings.Join(strings.Fields(short), " ")
+		if len(short) > 80 {
+			short = short[:77] + "..."
+		}
 	}
-	return long, short
+	return strings.Join(lines, "\n"), short, usage
 }
 
 func Execute(args ...any) {

@@ -44,7 +44,7 @@ func newOptions(t reflect.Type, fs *flag.FlagSet, parentID string) *options {
 }
 
 type flagVarOpts[T any] struct {
-	flagTVar func(*T, string, T, string)
+	flagTVar func(*T, string, string, T, string)
 	ptr      unsafe.Pointer
 	sf       reflect.StructField
 	s2t      func(string) (T, error)
@@ -52,13 +52,14 @@ type flagVarOpts[T any] struct {
 }
 
 func flagVar[T any](opts flagVarOpts[T]) {
+	name := toKebabCase(opts.sf.Name)
+	shorthand := opts.sf.Tag.Get("short")
 	defaultTag, ok := opts.sf.Tag.Lookup("default")
 	var defaultValue T
 	if ok {
 		defaultValue = ergo.Must1(opts.s2t(defaultTag))
 	}
-	// TODO: consider adding support for shorthand flags.
-	opts.flagTVar((*T)(opts.ptr), toKebabCase(opts.sf.Name), defaultValue, opts.usage)
+	opts.flagTVar((*T)(opts.ptr), name, shorthand, defaultValue, opts.usage)
 }
 
 func (opts *options) declareFlags(fs *flag.FlagSet, parentID string) {
@@ -68,25 +69,25 @@ func (opts *options) declareFlags(fs *flag.FlagSet, parentID string) {
 		usage := docs[parentID+"."+sf.Name]
 		switch sf.Type.Kind() {
 		case reflect.Bool:
-			flagVar(flagVarOpts[bool]{fs.BoolVar, ptr, sf, strconv.ParseBool, usage})
+			flagVar(flagVarOpts[bool]{fs.BoolVarP, ptr, sf, strconv.ParseBool, usage})
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			s2i64 := func(s string) (int64, error) {
 				return strconv.ParseInt(s, 10, 64)
 			}
-			flagVar(flagVarOpts[int64]{fs.Int64Var, ptr, sf, s2i64, usage})
+			flagVar(flagVarOpts[int64]{fs.Int64VarP, ptr, sf, s2i64, usage})
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			s2u64 := func(s string) (uint64, error) {
 				return strconv.ParseUint(s, 10, 64)
 			}
-			flagVar(flagVarOpts[uint64]{fs.Uint64Var, ptr, sf, s2u64, usage})
+			flagVar(flagVarOpts[uint64]{fs.Uint64VarP, ptr, sf, s2u64, usage})
 		case reflect.Float32, reflect.Float64:
 			s2f64 := func(s string) (float64, error) {
 				return strconv.ParseFloat(s, 64)
 			}
-			flagVar(flagVarOpts[float64]{fs.Float64Var, ptr, sf, s2f64, usage})
+			flagVar(flagVarOpts[float64]{fs.Float64VarP, ptr, sf, s2f64, usage})
 		case reflect.String:
 			s2s := func(s string) (string, error) { return s, nil }
-			flagVar(flagVarOpts[string]{fs.StringVar, ptr, sf, s2s, usage})
+			flagVar(flagVarOpts[string]{fs.StringVarP, ptr, sf, s2s, usage})
 		case reflect.Struct:
 			if opts.parentIndex != -1 {
 				log.Fatalf("want: exactly one struct field; got: '%#v'", opts.t)
