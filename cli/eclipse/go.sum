@@ -1,5 +1,5 @@
-github.com/avamsi/eclipse v0.0.0-20220823185531-0080076f6387 h1:6/HleIuKkNDx38arNxjAbGfHrpyx1DGnYg34JEaMa8E=
-github.com/avamsi/eclipse v0.0.0-20220823185531-0080076f6387/go.mod h1:3gvD8XjR8fvUlsQjIl4z6jeTRE0hAH7foayDlLNXWWo=
+github.com/avamsi/eclipse v0.1.1 h1:MEcqNTt6rtv5NKjXsXmk6ZI3SOO7sf+MeUCvBlcKGXw=
+github.com/avamsi/eclipse v0.1.1/go.mod h1:3gvD8XjR8fvUlsQjIl4z6jeTRE0hAH7foayDlLNXWWo=
 github.com/avamsi/ergo v0.0.0-20220813110843-329213a43bfc h1:yijOcj7IpXEwHAuqcbC9Z50PrMaj/dv5ID8Qmes85ck=
 github.com/avamsi/ergo v0.0.0-20220813110843-329213a43bfc/go.mod h1:ptOtFkHOxyC8N1E/gRCBeqwdDZ6nv4j5jt5faOOJLLY=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
