@@ -3,7 +3,8 @@ package eclipse
 import (
 	"bytes"
 	"encoding/gob"
-	"log"
+	"fmt"
+	"os"
 	"reflect"
 	"strings"
 
@@ -13,19 +14,26 @@ import (
 
 var docs map[string]string
 
+const (
+	shortDirective = "Short: "
+	usageDirective = "Usage: "
+)
+
 func parsedCmdDocFor(s string) (long, short, usage string) {
 	lines := []string{}
 	for _, l := range strings.Split(docs[s], "\n") {
-		if strings.HasPrefix(l, "Short: ") {
+		if strings.HasPrefix(l, shortDirective) {
 			if short != "" {
-				panic("TODO")
+				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one short directive", l)
+				os.Exit(1)
 			}
-			short = strings.TrimPrefix(l, "Short: ")
+			short = s[len(shortDirective):]
 		} else if strings.HasPrefix(l, "Usage: ") {
 			if usage != "" {
-				panic("TODO")
+				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one usage directive", l)
+				os.Exit(1)
 			}
-			usage = strings.TrimPrefix(l, "Usage: ")
+			usage = s[len(usageDirective):]
 		} else {
 			lines = append(lines, l)
 		}
@@ -58,7 +66,8 @@ func Execute(args ...any) {
 		rootCobraCmds[cobraCmd.Root()] = true
 	}
 	if len(rootCobraCmds) != 1 {
-		log.Fatalf("want: exactly one root command; got: '%#v'", rootCobraCmds)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one root command", rootCobraCmds)
+		os.Exit(1)
 	}
 	for rootCobraCmd := range rootCobraCmds {
 		rootCobraCmd.Execute()

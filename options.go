@@ -1,7 +1,8 @@
 package eclipse
 
 import (
-	"log"
+	"fmt"
+	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -32,7 +33,8 @@ type options struct {
 
 func newOptions(t reflect.Type, fs *flag.FlagSet, parentID string) *options {
 	if t.Kind() != reflect.Struct {
-		log.Fatalf("want: struct; got: '%#v'", t)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: struct", t)
+		os.Exit(1)
 	}
 	opts := &options{
 		t:           t,
@@ -90,11 +92,13 @@ func (opts *options) declareFlags(fs *flag.FlagSet, parentID string) {
 			flagVar(flagVarOpts[string]{fs.StringVarP, ptr, sf, s2s, usage})
 		case reflect.Struct:
 			if opts.parentIndex != -1 {
-				log.Fatalf("want: exactly one struct field; got: '%#v'", opts.t)
+				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one struct field", sf)
+				os.Exit(1)
 			}
 			opts.parentIndex = i
 		default:
-			log.Fatalf("want: bool|int|uint|float|string fields; got: '%#v'", sf)
+			fmt.Fprintf(os.Stderr, "got: '%#v'; want: bool|int|uint|float|string fields", sf)
+			os.Exit(1)
 		}
 	}
 }

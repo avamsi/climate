@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/gob"
+	"fmt"
 	"go/ast"
 	"go/doc"
 	"go/parser"
 	"go/token"
 	"io/fs"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -20,7 +20,7 @@ import (
 
 func onlyElement[T any](s []T) T {
 	if len(s) != 1 {
-		log.Panicf("want: exactly 1 element; got: '%#v'", s)
+		panic(fmt.Sprintf("got: '%#v'; want: exactly 1 element", s))
 	}
 	return s[0]
 }

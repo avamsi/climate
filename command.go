@@ -2,7 +2,7 @@ package eclipse
 
 import (
 	"fmt"
-	"log"
+	"os"
 	"reflect"
 	"strings"
 
@@ -39,7 +39,8 @@ var reg = registry{m: map[string]*command{}}
 
 func parseMethod(m reflect.Method) (optsT *reflect.Type, argsIn bool) {
 	if m.Type.IsVariadic() {
-		log.Fatalf("want: method with non-variadic inputs; got: '%#v'", m.Type)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: method with non-variadic inputs", m.Type)
+		os.Exit(1)
 	}
 	i := 1
 	if i < m.Type.NumIn() && m.Type.In(i).Kind() == reflect.Struct {
@@ -52,13 +53,16 @@ func parseMethod(m reflect.Method) (optsT *reflect.Type, argsIn bool) {
 			argsIn = true
 			i++
 			if m.Name == "Execute" {
-				log.Fatalf("want: no args; got: '%#v'", m.Type)
+				fmt.Fprintf(os.Stderr, "got: '%#v'; "+
+					"want: Execute method to not have slice of strings input", m.Type)
+				os.Exit(1)
 			}
 		}
 	}
 	if i != m.Type.NumIn() {
-		log.Fatalf("want: method with an optional struct input, "+
-			"followed by an optional slice of strings input; got: '%#v'", m.Type)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: method with an optional struct input, "+
+			"followed by an optional slice of strings input", m.Type)
+		os.Exit(1)
 	}
 	return optsT, argsIn
 }
@@ -78,7 +82,8 @@ func copyMethodToCobraCmd(m reflect.Method, s reflect.Value, cobraCmd *cobra.Com
 			inputs = append(inputs, opts.v)
 		}
 		if !argsIn && len(args) > 0 {
-			log.Fatalf("want: no args; got: '%#v'", args)
+			fmt.Fprintf(os.Stderr, "got unrecognized inputs: '%#v'; please run --help", args)
+			os.Exit(1)
 		}
 		inputs = append(inputs, reflect.ValueOf(args))
 		outs := m.Func.Call(inputs[:m.Type.NumIn()])
@@ -92,15 +97,18 @@ func copyMethodToCobraCmd(m reflect.Method, s reflect.Value, cobraCmd *cobra.Com
 				fmt.Println(out.String())
 			}
 			if err != nil {
-				log.Println(err)
+				fmt.Fprintln(os.Stderr, err.Error())
+				os.Exit(1)
 			}
 		}
+		os.Exit(0)
 	}
 }
 
 func typeToCommand(t reflect.Type) *command {
 	if t.Kind() != reflect.Struct {
-		log.Fatalf("want: struct, got: '%#v'", t)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: struct", t)
+		os.Exit(1)
 	}
 	if cmd := reg.get(t); cmd != nil {
 		return cmd
