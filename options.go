@@ -33,7 +33,7 @@ type options struct {
 
 func newOptions(t reflect.Type, fs *flag.FlagSet, parentID string) *options {
 	if t.Kind() != reflect.Struct {
-		fmt.Fprintf(os.Stderr, "got: '%#v'; want: struct", t)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: struct\n", t)
 		os.Exit(1)
 	}
 	opts := &options{
@@ -92,12 +92,12 @@ func (opts *options) declareFlags(fs *flag.FlagSet, parentID string) {
 			flagVar(flagVarOpts[string]{fs.StringVarP, ptr, sf, s2s, usage})
 		case reflect.Struct:
 			if opts.parentIndex != -1 {
-				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one struct field", sf)
+				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one struct field\n", sf)
 				os.Exit(1)
 			}
 			opts.parentIndex = i
 		default:
-			fmt.Fprintf(os.Stderr, "got: '%#v'; want: bool|int|uint|float|string fields", sf)
+			fmt.Fprintf(os.Stderr, "got: '%#v'; want: bool|int|uint|float|string fields\n", sf)
 			os.Exit(1)
 		}
 	}

@@ -24,13 +24,13 @@ func parsedCmdDocFor(s string) (long, short, usage string) {
 	for _, l := range strings.Split(docs[s], "\n") {
 		if strings.HasPrefix(l, shortDirective) {
 			if short != "" {
-				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one short directive", l)
+				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one short directive\n", l)
 				os.Exit(1)
 			}
 			short = s[len(shortDirective):]
 		} else if strings.HasPrefix(l, "Usage: ") {
 			if usage != "" {
-				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one usage directive", l)
+				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one usage directive\n", l)
 				os.Exit(1)
 			}
 			usage = s[len(usageDirective):]
@@ -38,6 +38,7 @@ func parsedCmdDocFor(s string) (long, short, usage string) {
 			lines = append(lines, l)
 		}
 	}
+	long = strings.Join(lines, "\n")
 	if short == "" {
 		i := strings.Index(long, "\n\n")
 		if i != -1 {
@@ -48,7 +49,7 @@ func parsedCmdDocFor(s string) (long, short, usage string) {
 			short = short[:77] + "..."
 		}
 	}
-	return strings.Join(lines, "\n"), short, usage
+	return long, short, usage
 }
 
 func Execute(args ...any) {
@@ -66,7 +67,7 @@ func Execute(args ...any) {
 		rootCobraCmds[cobraCmd.Root()] = true
 	}
 	if len(rootCobraCmds) != 1 {
-		fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one root command", rootCobraCmds)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one root command\n", rootCobraCmds)
 		os.Exit(1)
 	}
 	for rootCobraCmd := range rootCobraCmds {

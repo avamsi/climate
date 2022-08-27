@@ -39,7 +39,7 @@ var reg = registry{m: map[string]*command{}}
 
 func parseMethod(m reflect.Method) (optsT *reflect.Type, argsIn bool) {
 	if m.Type.IsVariadic() {
-		fmt.Fprintf(os.Stderr, "got: '%#v'; want: method with non-variadic inputs", m.Type)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: method with non-variadic inputs\n", m.Type)
 		os.Exit(1)
 	}
 	i := 1
@@ -54,14 +54,14 @@ func parseMethod(m reflect.Method) (optsT *reflect.Type, argsIn bool) {
 			i++
 			if m.Name == "Execute" {
 				fmt.Fprintf(os.Stderr, "got: '%#v'; "+
-					"want: Execute method to not have slice of strings input", m.Type)
+					"want: Execute method to not have slice of strings input\n", m.Type)
 				os.Exit(1)
 			}
 		}
 	}
 	if i != m.Type.NumIn() {
 		fmt.Fprintf(os.Stderr, "got: '%#v'; want: method with an optional struct input, "+
-			"followed by an optional slice of strings input", m.Type)
+			"followed by an optional slice of strings input\n", m.Type)
 		os.Exit(1)
 	}
 	return optsT, argsIn
@@ -82,7 +82,7 @@ func copyMethodToCobraCmd(m reflect.Method, s reflect.Value, cobraCmd *cobra.Com
 			inputs = append(inputs, opts.v)
 		}
 		if !argsIn && len(args) > 0 {
-			fmt.Fprintf(os.Stderr, "got unrecognized inputs: '%#v'; please run --help", args)
+			fmt.Fprintf(os.Stderr, "got unrecognized inputs: '%#v'; please run --help\n", args)
 			os.Exit(1)
 		}
 		inputs = append(inputs, reflect.ValueOf(args))
@@ -107,7 +107,7 @@ func copyMethodToCobraCmd(m reflect.Method, s reflect.Value, cobraCmd *cobra.Com
 
 func typeToCommand(t reflect.Type) *command {
 	if t.Kind() != reflect.Struct {
-		fmt.Fprintf(os.Stderr, "got: '%#v'; want: struct", t)
+		fmt.Fprintf(os.Stderr, "got: '%#v'; want: struct\n", t)
 		os.Exit(1)
 	}
 	if cmd := reg.get(t); cmd != nil {
