@@ -27,13 +27,13 @@ func parsedCmdDocFor(s string) (long, short, usage string) {
 				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one short directive\n", l)
 				os.Exit(1)
 			}
-			short = s[len(shortDirective):]
+			short = l[len(shortDirective):]
 		} else if strings.HasPrefix(l, "Usage: ") {
 			if usage != "" {
 				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one usage directive\n", l)
 				os.Exit(1)
 			}
-			usage = s[len(usageDirective):]
+			usage = l[len(usageDirective):]
 		} else {
 			lines = append(lines, l)
 		}
