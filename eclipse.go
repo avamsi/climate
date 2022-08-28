@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"unicode"
 
 	"github.com/avamsi/ergo"
 	"github.com/spf13/cobra"
@@ -40,13 +41,28 @@ func parsedCmdDocFor(s string) (long, short, usage string) {
 	}
 	long = strings.Join(lines, "\n")
 	if short == "" {
-		i := strings.Index(long, "\n\n")
+		short = long
+		i := strings.Index(short, "\n\n")
 		if i != -1 {
-			short = long[:i]
+			short = short[:i]
 		}
+		// TODO: another possibility here instead of trying to fit this on one
+		// line is to indent the following lines so they're still readable.
 		short = strings.Join(strings.Fields(short), " ")
-		if len(short) > 80 {
-			short = short[:77] + "..."
+		if short != "" {
+			runes := []rune(short)
+			runes[0] = unicode.ToUpper(runes[0])
+			if len(runes) > 80 {
+				runes = append(runes[:77], []rune("...")...)
+			} else if len(runes) > 1 && runes[len(runes)-1] == '.' {
+				// Clip the period at the end by convention but only if the
+				// last but one character is a letter or a digit.
+				// TODO: do something about the other cases?
+				if unicode.IsLetter(runes[len(runes)-2]) || unicode.IsDigit(runes[len(runes)-2]) {
+					runes = runes[:len(runes)-1]
+				}
+			}
+			short = string(runes)
 		}
 	}
 	return long, short, usage
