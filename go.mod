@@ -3,7 +3,7 @@ module github.com/avamsi/clifr
 go 1.18
 
 require (
-	github.com/avamsi/ergo v0.0.0-20220813110843-329213a43bfc
+	github.com/avamsi/ergo v0.1.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
 )

@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/avamsi/clifr v0.3.0
-	github.com/avamsi/ergo v0.0.0-20220813110843-329213a43bfc
+	github.com/avamsi/ergo v0.1.0
 	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 )
 
