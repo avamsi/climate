@@ -24,6 +24,8 @@ type Cobra struct {
 type AddOpts struct {
 	// variable name of parent command for this command
 	Parent string `short:"p" default:"rootCmd"`
+	// list of flags for this command
+	Flags []string
 }
 
 // Add (cobra add) will create a new command, with a license and

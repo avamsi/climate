@@ -10,7 +10,7 @@ jump to the [tl;dr](#tldr) section below.
 ### Commands
 
 With Clifr, to create a command, all you need to do is create a struct (and then pass it to `clifr.Execute`).
-To make the "root" command itself runnable, you just add an `Execute` (note that it's exported) method to the struct.
+To make the "root" command itself runnable, you just add an exported `Execute` method to the struct.
 And to add subcommands, you just add more exported methods to the struct --
 
 ```go
@@ -123,6 +123,27 @@ Global Flags:
       --license string
 ```
 
+In addition to all the (singular) primitive types you'd expect (like string, bool, float e.t.c.), Clifr also supports
+repeated flags through slices of said primitives. For example, the `Flags` field in the code below will be populated
+with the slice `[]string{"a", "b", "c", "d"}` --
+
+```go
+type AddOpts struct {
+	// variable name of parent command for this command
+	Parent string `short:"p" default:"rootCmd"`
+	// list of flags for this command
+	Flags []string
+}
+
+func (c Cobra) Add(opts AddOpts) {
+	fmt.Println("cobra add", c, opts)
+}
+```
+
+``` shell
+$ cobra add --flags=a,b --flags=c,d
+```
+
 ### Subcommand-ception
 
 To create more "parent" commands (i.e., commands with subcommands, like the root command),
@@ -186,6 +207,8 @@ type Cobra struct {
 type AddOpts struct {
 	// variable name of parent command for this command
 	Parent string `short:"p" default:"rootCmd"`
+	// list of flags for this command
+	Flags []string
 }
 
 // Add (cobra add) will create a new command, with a license and
@@ -272,6 +295,7 @@ Usage:
   cobra add [command name] [flags]
 
 Flags:
+      --flags strings
   -h, --help            help for add
   -p, --parent string   variable name of parent command for this command (default "rootCmd")
 
