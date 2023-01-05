@@ -1,4 +1,4 @@
-module github.com/avamsi/eclipse
+module github.com/avamsi/clifr
 
 go 1.18
 

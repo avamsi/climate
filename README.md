@@ -1,6 +1,6 @@
-# Eclipse
+# Clifr
 
-Eclipse aims to make creating CLIs in Go easy (and fun!), similar to [python-fire](https://github.com/google/python-fire).
+Clifr aims to make creating CLIs in Go easy (and fun!), similar to [python-fire](https://github.com/google/python-fire).
 
 ## Usage
 
@@ -9,7 +9,7 @@ jump to the [tl;dr](#tldr) section below.
 
 ### Commands
 
-With Eclipse, to create a command, all you need to do is create a struct (and then pass it to `eclipse.Execute`).
+With Clifr, to create a command, all you need to do is create a struct (and then pass it to `clifr.Execute`).
 To make the "root" command itself runnable, you just add an `Execute` (note that it's exported) method to the struct.
 And to add subcommands, you just add more exported methods to the struct --
 
@@ -29,7 +29,7 @@ func (Cobra) Add() {
 }
 ```
 
-Eclipse is built on top of [Cobra](https://github.com/spf13/cobra) (and through it), autogenerates completion and help commands for you --
+Clifr is built on top of [Cobra](https://github.com/spf13/cobra) (and through it), autogenerates completion and help commands for you --
 
 ```
 $ cobra --help
@@ -52,7 +52,7 @@ Use "cobra [command] --help" for more information about a command.
 
 ### Flags
 
-Eclipse also makes adding flags easy.
+Clifr also makes adding flags easy.
 To add "global" flags (i.e., something that's applicable for all the commands i.e., the "root" command and all subcommands),
 you just add exported value fields to the struct.
 
@@ -146,12 +146,12 @@ func (p Pretend) Init() {
 
 ### Default values, shorthands and docs
 
-Eclipse also supports setting default values and shorthands for flags through respective struct tags and
+Clifr also supports setting default values and shorthands for flags through respective struct tags and
 is able to autogenerate help documentation from Godocs if you're willing to suffer an extra step
-(you'll need to install the Eclipse CLI and run `go generate ./...` on any Godoc changes).
+(you'll need to install the Clifr CLI and run `go generate ./...` on any Godoc changes).
 
 ``` shell
-$ go install github.com/avamsi/eclipse/cli/eclipse@latest
+$ go install github.com/avamsi/clifr/cli/clifr@latest
 $ go generate ./...
 ```
 
@@ -167,7 +167,7 @@ import (
 
 	_ "embed"
 
-	"github.com/avamsi/eclipse"
+	"github.com/avamsi/clifr"
 )
 
 // Cobra is a CLI library for Go that empowers applications.
@@ -218,12 +218,12 @@ func (p Pretend) Init() {
 	fmt.Println("cobra pretend init", p)
 }
 
-//go:generate eclipse docs --out=eclipse.docs
-//go:embed eclipse.docs
+//go:generate clifr docs --out=clifr.docs
+//go:embed clifr.docs
 var docs []byte
 
 func main() {
-	eclipse.Execute(docs, Cobra{}, Pretend{})
+	clifr.Execute(docs, Cobra{}, Pretend{})
 }
 ```
 

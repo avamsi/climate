@@ -1,4 +1,4 @@
-package eclipse
+package clifr
 
 import (
 	"encoding/csv"

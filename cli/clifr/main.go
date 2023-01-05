@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/avamsi/eclipse"
+	"github.com/avamsi/clifr"
 	"github.com/avamsi/ergo"
 	"golang.org/x/exp/maps"
 )
@@ -74,9 +74,9 @@ func populateDocs(dir string, docs map[string]string) {
 	}
 }
 
-type Eclipse struct{}
+type Clifr struct{}
 
-func (Eclipse) Docs(opts struct{ Out string }) {
+func (Clifr) Docs(opts struct{ Out string }) {
 	docs := map[string]string{}
 	cwd := ergo.Must1(os.Getwd())
 	populateDocs(cwd, docs)
@@ -93,5 +93,5 @@ func (Eclipse) Docs(opts struct{ Out string }) {
 }
 
 func main() {
-	eclipse.Execute(Eclipse{})
+	clifr.Execute(Clifr{})
 }

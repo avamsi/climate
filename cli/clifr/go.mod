@@ -1,9 +1,9 @@
-module github.com/avamsi/eclipse/cli/eclipse
+module github.com/avamsi/clifr/cli/clifr
 
 go 1.18
 
 require (
-	github.com/avamsi/eclipse v0.2.2
+	github.com/avamsi/clifr v0.2.2
 	github.com/avamsi/ergo v0.0.0-20220813110843-329213a43bfc
 	golang.org/x/exp v0.0.0-20220827204233-334a2380cb91
 )

@@ -5,7 +5,7 @@ import (
 
 	_ "embed"
 
-	"github.com/avamsi/eclipse"
+	"github.com/avamsi/clifr"
 )
 
 // Cobra is a CLI library for Go that empowers applications.
@@ -56,10 +56,10 @@ func (p Pretend) Init() {
 	fmt.Println("cobra pretend init", p)
 }
 
-//go:generate eclipse docs --out=eclipse.docs
-//go:embed eclipse.docs
+//go:generate clifr docs --out=clifr.docs
+//go:embed clifr.docs
 var docs []byte
 
 func main() {
-	eclipse.Execute(docs, Cobra{}, Pretend{})
+	clifr.Execute(docs, Cobra{}, Pretend{})
 }
