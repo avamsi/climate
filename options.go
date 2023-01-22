@@ -109,7 +109,7 @@ func (opts *options) declareFlags(fs *flag.FlagSet, parentID string) {
 	for i := 0; i < opts.t.NumField(); i++ {
 		ptr := opts.v.Field(i).Addr().UnsafePointer()
 		sf := opts.t.Field(i)
-		usage := docs[parentID+"."+sf.Name]
+		usage := docs[parentID+"."+sf.Name].Long
 		switch sf.Type.Kind() {
 		case reflect.Bool:
 			flagVar(flagVarOpts[bool]{fs.BoolVarP, ptr, sf, strconv.ParseBool, usage})

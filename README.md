@@ -195,7 +195,7 @@ import (
 // This application is a tool to generate the needed files
 // to quickly create a Cobra application.
 //
-// Usage: cobra [command]
+//clifr:usage cobra [command]
 type Cobra struct {
 	// author name for copyright attribution
 	Author string `short:"a" default:"YOUR NAME"`
@@ -220,8 +220,8 @@ type AddOpts struct {
 //
 // Example: cobra add server -> resulting in a new cmd/server.go
 //
-// Short: Add a command to a Cobra Application
-// Usage: add [command name]
+//clifr:short Add a command to a Cobra Application
+//clifr:usage add [command name]
 func (c Cobra) Add(opts AddOpts, args []string) {
 	fmt.Println("cobra add", c, opts, args)
 }
@@ -235,14 +235,14 @@ type Pretend struct {
 //
 // Cobra init must be run inside of a go module (please run "go mod init <MODNAME>" first)
 //
-// Short: Initialize a Cobra Application
-// Usage: init [path] [flags]
+//clifr:short Initialize a Cobra Application
+//clifr:usage init [path] [flags]
 func (p Pretend) Init() {
 	fmt.Println("cobra pretend init", p)
 }
 
-//go:generate clifr docs --out=clifr.docs
-//go:embed clifr.docs
+//go:generate clifr docs --out=docs.clifr
+//go:embed docs.clifr
 var docs []byte
 
 func main() {
