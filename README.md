@@ -172,7 +172,7 @@ is able to autogenerate help documentation from Godocs if you're willing to suff
 (you'll need to install the Clifr CLI and run `go generate ./...` on any Godoc changes).
 
 ``` shell
-$ go install github.com/avamsi/clifr/cli/clifr@latest
+$ go install github.com/avamsi/clifr/cmd/clifr@latest
 $ go generate ./...
 ```
 
