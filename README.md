@@ -1,306 +1,73 @@
-# Clifr
+# Climate
 
-Clifr aims to make creating CLIs in Go easy (and fun!), similar to [python-fire](https://github.com/google/python-fire).
+Climate "CLI Mate" aims to make creating CLIs in Go easy (and fun!), similar to
+[python-fire](https://github.com/google/python-fire). It's also built on top of
+[Cobra](https://github.com/spf13/cobra), so comes with "batteries included".
 
 ## Usage
 
-If you want to skip the incremental introduction and would instead prefer seeing working code for a full feature demo,
-jump to the [tl;dr](#tldr) section below.
-
-### Commands
-
-With Clifr, to create a command, all you need to do is create a struct (and then pass it to `clifr.Execute`).
-To make the "root" command itself runnable, you just add an exported `Execute` method to the struct.
-And to add subcommands, you just add more exported methods to the struct --
-
-```go
-type Cobra struct{}
-
-func (Cobra) Execute() {
-	fmt.Println("cobra")
-}
-
-func (Cobra) Init() {
-	fmt.Println("cobra init")
-}
-
-func (Cobra) Add() {
-	fmt.Println("cobra add")
-}
-```
-
-Clifr is built on top of [Cobra](https://github.com/spf13/cobra) (and through it), autogenerates completion and help commands for you --
+https://github.com/avamsi/climate/blob/main/cmd/examples/greet/main.go
 
 ```
-$ cobra --help
+$ greet --help
+
+Greet someone.
 
 Usage:
-  cobra [flags]
-  cobra [command]
+  greet [opts]
+
+Flags:
+  -g, --greeting string   greeting to use (default "Hello")
+  -h, --help              help for greet
+  -n, --name string       name to greet (default "World")
+```
+
+### Subcommands
+
+https://github.com/avamsi/climate/blob/main/cmd/examples/jj/main.go
+
+```
+$ jj --help
+
+Jujutsu (an experimental VCS).
+
+Usage:
+  jj [command]
 
 Available Commands:
-  add
   completion  Generate the autocompletion script for the specified shell
+  git         Commands for working with the underlying Git repo
   help        Help about any command
-  init
+  init        Create a new repo in the given directory
+  squash      Move changes from a revision into its parent
+  util        Infrequently used commands such as for generating shell completions
 
 Flags:
-  -h, --help   help for command
+  -h, --help                  help for jj
+      --ignore-working-copy   don't snapshot / update the working copy
+  -R, --repository path       path to the repo to operate on
 
-Use "cobra [command] --help" for more information about a command.
+Use "jj [command] --help" for more information about a command.
 ```
 
-### Flags
-
-Clifr also makes adding flags easy.
-To add "global" flags (i.e., something that's applicable for all the commands i.e., the "root" command and all subcommands),
-you just add exported value fields to the struct.
-
-To add "local" flags (i.e., something that's only applicable for a single command),
-you just create a (potentially anonymous) struct (again, with exported value fields) and add it as a param to the respective method.
-
-This would look something like --
-
-```go
-type Cobra struct {
-	Author  string
-	Config  string
-	License string
-}
-
-func (c Cobra) Init() {
-	fmt.Println("cobra init", c)
-}
-
-type AddOpts struct {
-	Parent string
-}
-
-func (c Cobra) Add(opts AddOpts) {
-	fmt.Println("cobra add", c, opts)
-}
 ```
+$ jj git --help
 
-Let's also see what the help page looks like --
-
-```
-$ cobra --help
+Commands for working with the underlying Git repo.
 
 Usage:
-  cobra [flags]
-  cobra [command]
+  jj git [command]
 
 Available Commands:
-  add
-  completion  Generate the autocompletion script for the specified shell
-  help        Help about any command
-  init
+  export      Update the underlying Git repo with changes made in the repo
+  remote      Manage Git remotes
 
 Flags:
-      --author string
-      --config string
-  -h, --help             help for cobra
-      --license string
-
-Use "cobra [command] --help" for more information about a command.
-```
-
-And for a subcommand --
-
-```
-$ cobra add --help
-
-Usage:
-  cobra add [flags]
-
-Flags:
-  -h, --help            help for add
-      --parent string
+  -h, --help   help for git
 
 Global Flags:
-      --author string
-      --config string
-      --license string
-```
+      --ignore-working-copy   don't snapshot / update the working copy
+  -R, --repository path       path to the repo to operate on
 
-In addition to all the (singular) primitive types you'd expect (like string, bool, float e.t.c.), Clifr also supports
-repeated flags through slices of said primitives. For example, the `Flags` field in the code below will be populated
-with the slice `[]string{"a", "b", "c", "d"}` --
-
-```go
-type AddOpts struct {
-	// variable name of parent command for this command
-	Parent string `short:"p" default:"rootCmd"`
-	// list of flags for this command
-	Flags []string
-}
-
-func (c Cobra) Add(opts AddOpts) {
-	fmt.Println("cobra add", c, opts)
-}
-```
-
-``` shell
-$ cobra add --flags=a,b --flags=c,d
-```
-
-### Subcommand-ception
-
-To create more "parent" commands (i.e., commands with subcommands, like the root command),
-you just make them a struct with the root command or some other parent command as one of the fields. For example --
-
-```go
-type Cobra struct {
-	Author  string
-	Config  string
-	License string
-}
-
-type Pretend struct {
-	c Cobra
-}
-
-func (p Pretend) Init() {
-	fmt.Println("cobra pretend init", p)
-}
-```
-
-### Default values, shorthands and docs
-
-Clifr also supports setting default values and shorthands for flags through respective struct tags and
-is able to autogenerate help documentation from Godocs if you're willing to suffer an extra step
-(you'll need to install the Clifr CLI and run `go generate ./...` on any Godoc changes).
-
-``` shell
-$ go install github.com/avamsi/clifr/cmd/clifr@latest
-$ go generate ./...
-```
-
-### tl;dr
-
-Here's the code for a full feature demo --
-
-```go
-package main
-
-import (
-	"fmt"
-
-	_ "embed"
-
-	"github.com/avamsi/clifr"
-)
-
-// Cobra is a CLI library for Go that empowers applications.
-// This application is a tool to generate the needed files
-// to quickly create a Cobra application.
-//
-//clifr:usage cobra [command]
-type Cobra struct {
-	// author name for copyright attribution
-	Author string `short:"a" default:"YOUR NAME"`
-	Config string `default:"$HOME/.cobra.yaml"` // config file
-	// name of license for the project
-	License string `short:"l"`
-}
-
-type AddOpts struct {
-	// variable name of parent command for this command
-	Parent string `short:"p" default:"rootCmd"`
-	// list of flags for this command
-	Flags []string
-}
-
-// Add (cobra add) will create a new command, with a license and
-// the appropriate structure for a Cobra-based CLI application,
-// and register it to its parent (default rootCmd).
-//
-// If you want your command to be public, pass in the command name
-// with an initial uppercase letter.
-//
-// Example: cobra add server -> resulting in a new cmd/server.go
-//
-//clifr:short Add a command to a Cobra Application
-//clifr:usage add [command name]
-func (c Cobra) Add(opts AddOpts, args []string) {
-	fmt.Println("cobra add", c, opts, args)
-}
-
-type Pretend struct {
-	C Cobra
-}
-
-// Initialize (cobra init) will create a new application, with a license
-// and the appropriate structure for a Cobra-based CLI application.
-//
-// Cobra init must be run inside of a go module (please run "go mod init <MODNAME>" first)
-//
-//clifr:short Initialize a Cobra Application
-//clifr:usage init [path] [flags]
-func (p Pretend) Init() {
-	fmt.Println("cobra pretend init", p)
-}
-
-//go:generate clifr docs --out=docs.clifr
-//go:embed docs.clifr
-var docs []byte
-
-func main() {
-	clifr.Execute(docs, Cobra{}, Pretend{})
-}
-```
-
-Let's also see what the help page looks like --
-
-```
-$ cobra --help
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.
-
-Usage:
-  cobra [command]
-
-Available Commands:
-  add         Add a command to a Cobra Application
-  completion  Generate the autocompletion script for the specified shell
-  help        Help about any command
-  pretend
-
-Flags:
-  -a, --author string    author name for copyright attribution (default "YOUR NAME")
-      --config string    config file (default "$HOME/.cobra.yaml")
-  -h, --help             help for cobra
-  -l, --license string   name of license for the project
-
-Use "cobra [command] --help" for more information about a command.
-```
-
-And for a subcommand --
-
-```
-$ cobra add --help
-
-Add (cobra add) will create a new command, with a license and
-the appropriate structure for a Cobra-based CLI application,
-and register it to its parent (default rootCmd).
-
-If you want your command to be public, pass in the command name
-with an initial uppercase letter.
-
-Example: cobra add server -> resulting in a new cmd/server.go
-
-Usage:
-  cobra add [command name] [flags]
-
-Flags:
-      --flags strings
-  -h, --help            help for add
-  -p, --parent string   variable name of parent command for this command (default "rootCmd")
-
-Global Flags:
-  -a, --author string    author name for copyright attribution (default "YOUR NAME")
-      --config string    config file (default "$HOME/.cobra.yaml")
-  -l, --license string   name of license for the project
+Use "jj git [command] --help" for more information about a command.
 ```

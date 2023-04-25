@@ -1,12 +1,9 @@
-github.com/avamsi/ergo v0.0.0-20230228211140-aef27061b502 h1:dLiVE3YBdttZXv8/OEjtZoy3X8lM2zb8hfJwA/s0VK4=
-github.com/avamsi/ergo v0.0.0-20230228211140-aef27061b502/go.mod h1:fkpdHiOERrWwUQkzRpRxonbkjp6sjF/MByePFHqMwyo=
 github.com/avamsi/ergo v0.0.0-20230504113207-f481386973ee h1:5n4tfIdZGljOEbxiwnOr+MJ2WHIdkesCWy4WvVG5PGs=
 github.com/avamsi/ergo v0.0.0-20230504113207-f481386973ee/go.mod h1:PCSWwcXVPNhWxp8EMXW+0TkJ7Wj7Cv4GRTbQmzQc5IY=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v0.0.0-20161028175848-04cdfd42973b h1:XxMZvQZtTXpWMNWK82vdjCLCe7uGMFXdTsJH0v3Hkvw=
 github.com/davecgh/go-spew v0.0.0-20161028175848-04cdfd42973b/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
-github.com/google/go-cmp v0.5.9/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0 h1:GD+A8+e+wFkqje55/2fOVnZPkoDIu1VooBWfNrnY8Uo=

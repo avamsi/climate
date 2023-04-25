@@ -1,149 +1,152 @@
-package clifr
+package climate
 
 import (
-	"encoding/csv"
-	"fmt"
-	"os"
 	"reflect"
-	"regexp"
-	"strconv"
-	"strings"
 	"unsafe"
 
+	"github.com/avamsi/climate/internal"
+
 	"github.com/avamsi/ergo"
-
-	flag "github.com/spf13/pflag"
+	"github.com/spf13/pflag"
 )
 
-var (
-	anyUpperLower = regexp.MustCompile("(.)([A-Z][a-z])")
-	lowerUpper    = regexp.MustCompile("([a-z])([A-Z])")
-)
+type flagTypeVarP[T any] func(*T, string, string, T, string)
 
-func toKebabCase(s string) string {
-	s = anyUpperLower.ReplaceAllString(s, "${1}-${2}")
-	s = lowerUpper.ReplaceAllString(s, "${1}-${2}")
-	return strings.ToLower(s)
+type option struct {
+	fset            *pflag.FlagSet
+	t               reflect.Type
+	p               unsafe.Pointer
+	name, shorthand string
+	value           *string
+	usage           string
+}
+
+func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParser[T]) {
+	var (
+		p     = (*T)(opt.p)
+		value T
+	)
+	if opt.value != nil {
+		value = typer(*opt.value)
+	}
+	flagVarP(p, opt.name, opt.shorthand, value, opt.usage)
+}
+
+func (opt *option) declare() bool {
+	switch k := opt.t.Kind(); k {
+	case reflect.Bool:
+		declareOption(
+			opt.fset.BoolVarP,
+			opt,
+			parseBool,
+		)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		declareOption(
+			opt.fset.Int64VarP,
+			opt,
+			parseInt64,
+		)
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		declareOption(
+			opt.fset.Uint64VarP,
+			opt,
+			parseUint64,
+		)
+	case reflect.Float32, reflect.Float64:
+		declareOption(
+			opt.fset.Float64VarP,
+			opt,
+			parseFloat64,
+		)
+	case reflect.String:
+		declareOption(
+			opt.fset.StringVarP,
+			opt,
+			parseString,
+		)
+	case reflect.Slice:
+		switch e := opt.t.Elem(); e.Kind() {
+		case reflect.Bool:
+			declareOption(
+				opt.fset.BoolSliceVarP,
+				opt,
+				sliceParser(parseBool),
+			)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			declareOption(
+				opt.fset.Int64SliceVarP,
+				opt,
+				sliceParser(parseInt64),
+			)
+		case reflect.Float32, reflect.Float64:
+			declareOption(
+				opt.fset.Float64SliceVarP,
+				opt,
+				sliceParser(parseFloat64),
+			)
+		case reflect.String:
+			declareOption(
+				opt.fset.StringSliceVarP,
+				opt,
+				sliceParser(parseString),
+			)
+		default:
+			ergo.Panicf("not []bool | []Signed | []Float | []string: %q", e)
+		}
+	default:
+		if typeIsStructPointer(opt.t) {
+			return false
+		}
+		ergo.Panicf("not bool | Integer | Float | string | []T: %q", opt.t)
+	}
+	return true
 }
 
 type options struct {
-	t           reflect.Type
-	v           reflect.Value
-	parentIndex int
+	reflection
+	parent *reflection
+	fset   *pflag.FlagSet
+	md     *internal.Metadata
 }
 
-func newOptions(t reflect.Type, fs *flag.FlagSet, parentID string) *options {
-	if t.Kind() != reflect.Struct {
-		fmt.Fprintf(os.Stderr, "got: '%#v'; want: struct\n", t)
-		os.Exit(1)
-	}
-	opts := &options{
-		t:           t,
-		v:           reflect.New(t).Elem(),
-		parentIndex: -1,
-	}
-	opts.declareFlags(fs, parentID)
-	return opts
-}
-
-type flagVarOpts[T any] struct {
-	flagTVar func(*T, string, string, T, string)
-	ptr      unsafe.Pointer
-	sf       reflect.StructField
-	s2t      func(string) (T, error)
-	usage    string
-}
-
-func flagVar[T any](opts flagVarOpts[T]) {
-	name := toKebabCase(opts.sf.Name)
-	shorthand := opts.sf.Tag.Get("short")
-	defaultTag, ok := opts.sf.Tag.Lookup("default")
-	var defaultValue T
-	if ok {
-		defaultValue = ergo.Must1(opts.s2t(defaultTag))
-	}
-	opts.flagTVar((*T)(opts.ptr), name, shorthand, defaultValue, opts.usage)
-}
-
-func s2i64(s string) (int64, error) {
-	return strconv.ParseInt(s, 10, 64)
-}
-
-func s2u64(s string) (uint64, error) {
-	return strconv.ParseUint(s, 10, 64)
-}
-
-func s2f64(s string) (float64, error) {
-	return strconv.ParseFloat(s, 64)
-}
-
-func s2s(s string) (string, error) {
-	return s, nil
-}
-
-func toSlice[T any](s2t func(string) (T, error)) func(string) ([]T, error) {
-	return func(s string) ([]T, error) {
-		if s == "" {
-			return []T{}, nil
+func (opts *options) declare() {
+	parentSet := (opts.parent == nil)
+	for i := 0; i < opts.t().NumField(); i++ {
+		var (
+			f  = opts.t().Field(i)
+			md = opts.md.Child(f.Name)
+		)
+		// Long() returns the "Doc" part of the field and Short() returns the
+		// "Comment" part. Other Metadata is neither collected, nor used.
+		usage := md.Long()
+		if usage == "" {
+			usage = md.Short()
 		}
-		ts := []T{}
-		for _, ss := range strings.Split(s, ",") {
-			t, err := s2t(ss)
-			if err != nil {
-				return nil, err
-			}
-			ts = append(ts, t)
+		v := opts.v().Field(i)
+		opt := option{
+			fset:      opts.fset,
+			t:         f.Type,
+			p:         v.Addr().UnsafePointer(),
+			name:      f.Name,
+			shorthand: f.Tag.Get("short"),
+			usage:     usage,
 		}
-		return ts, nil
-	}
-}
-
-func s2ss(s string) ([]string, error) {
-	if s == "" {
-		return []string{}, nil
-	}
-	return csv.NewReader(strings.NewReader(s)).Read()
-}
-
-func (opts *options) declareFlags(fs *flag.FlagSet, parentID string) {
-	for i := 0; i < opts.t.NumField(); i++ {
-		ptr := opts.v.Field(i).Addr().UnsafePointer()
-		sf := opts.t.Field(i)
-		usage := docs[parentID+"."+sf.Name].Long
-		switch sf.Type.Kind() {
-		case reflect.Bool:
-			flagVar(flagVarOpts[bool]{fs.BoolVarP, ptr, sf, strconv.ParseBool, usage})
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			flagVar(flagVarOpts[int64]{fs.Int64VarP, ptr, sf, s2i64, usage})
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			flagVar(flagVarOpts[uint64]{fs.Uint64VarP, ptr, sf, s2u64, usage})
-		case reflect.Float32, reflect.Float64:
-			flagVar(flagVarOpts[float64]{fs.Float64VarP, ptr, sf, s2f64, usage})
-		case reflect.String:
-			flagVar(flagVarOpts[string]{fs.StringVarP, ptr, sf, s2s, usage})
-		case reflect.Slice:
-			switch sf.Type.Elem().Kind() {
-			case reflect.Bool:
-				flagVar(flagVarOpts[[]bool]{fs.BoolSliceVarP, ptr, sf, toSlice(strconv.ParseBool), usage})
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				flagVar(flagVarOpts[[]int64]{fs.Int64SliceVarP, ptr, sf, toSlice(s2i64), usage})
-			case reflect.Float32, reflect.Float64:
-				flagVar(flagVarOpts[[]float64]{fs.Float64SliceVarP, ptr, sf, toSlice(s2f64), usage})
-			case reflect.String:
-				flagVar(flagVarOpts[[]string]{fs.StringSliceVarP, ptr, sf, toSlice(s2s), usage})
-			default:
-				fmt.Fprintf(os.Stderr, "got: '%#v'; want: []bool|[]int|[]float|[]string fields\n", sf)
-				os.Exit(1)
+		if value, ok := f.Tag.Lookup("default"); ok {
+			opt.value = &value
+		}
+		if !opt.declare() {
+			if opts.parent == nil {
+				ergo.Panicf("not bool | Integer | Float | string | []T: %q", f.Type)
 			}
-		case reflect.Struct:
-			if opts.parentIndex != -1 {
-				fmt.Fprintf(os.Stderr, "got: '%#v'; want: exactly one struct field\n", sf)
-				os.Exit(1)
+			if f.Type != opts.parent.ptr.t() {
+				ergo.Panicf(
+					"not bool | Integer | Float | string | []T | %q: %q",
+					opts.parent.t(), f.Type)
 			}
-			opts.parentIndex = i
-		default:
-			fmt.Fprintf(os.Stderr, "got: '%#v'; want: bool|int|uint|float|string|slice fields\n", sf)
-			os.Exit(1)
+			if parentSet {
+				ergo.Panicf("more than one parent: %q", f.Type)
+			}
+			v.Set(*opts.parent.ptr.v())
 		}
 	}
 }

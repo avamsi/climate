@@ -1,11 +1,14 @@
-module github.com/avamsi/clifr
+module github.com/avamsi/climate
 
-go 1.19
+go 1.20
 
 require (
-	github.com/avamsi/ergo v0.0.0-20230228211140-aef27061b502
-	github.com/spf13/cobra v1.6.1
+	github.com/avamsi/ergo v0.0.0-20230504113207-f481386973ee
+	github.com/google/go-cmp v0.5.9
+	github.com/sanity-io/litter v1.5.5
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
+	golang.org/x/text v0.9.0
 )
 
 require github.com/inconshreveable/mousetrap v1.1.0 // indirect

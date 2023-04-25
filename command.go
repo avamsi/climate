@@ -1,147 +1,137 @@
-package clifr
+package climate
 
 import (
-	"fmt"
-	"os"
 	"reflect"
-	"strings"
 
+	"github.com/avamsi/climate/internal"
+
+	"github.com/avamsi/ergo"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
-func addr[T any](arg T) *T {
-	return &arg
-}
-
 type command struct {
-	opts     *options
-	cobraCmd *cobra.Command
+	delegate cobra.Command
 }
 
-type registry struct {
-	m map[string]*command
+func newCommand(name string, md *internal.Metadata) *command {
+	delegate := cobra.Command{
+		Use:     md.Usage(name),
+		Aliases: md.Aliases(),
+		Short:   md.Short(),
+		Long:    md.Long(),
+	}
+	if md != nil {
+		delegate.DisableFlagsInUseLine = true
+	}
+	return &command{delegate}
 }
 
-func (reg *registry) get(t reflect.Type) *command {
-	if t.PkgPath() == "" || t.Name() == "" {
+func (cmd *command) addCommand(sub *command) {
+	cmd.delegate.AddCommand(&sub.delegate)
+}
+
+func (cmd *command) run() error {
+	normalize := func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
+		return pflag.NormalizedName(internal.NormalizeToKebabCase(name))
+	}
+	// While we prefer kebab-case for flags, we do support other well-formed,
+	// cases through normalization (but only kebab-case shows up in --help).
+	cmd.delegate.SetGlobalNormalizationFunc(normalize)
+	return cmd.delegate.Execute()
+}
+
+type funcCommandBuilder struct {
+	name string
+	reflection
+	md *internal.Metadata
+}
+
+func (fcb *funcCommandBuilder) build() *command {
+	var (
+		cmd    = newCommand(fcb.name, fcb.md)
+		i      = 0
+		n      = fcb.t().NumIn()
+		inOpts *reflect.Value
+		inArgs = false
+	)
+	// We support the signatures func([opts *T], [args []string]) [(err error)],
+	// which is to say all of opts, args and error are optional. If opts is
+	// present, T must be a struct (and we use its fields as flags).
+	// TODO: maybe support variadic, array and normal string arguments too.
+	if i < n {
+		t := fcb.t().In(i)
+		if typeIsStructPointer(t) {
+			r := reflection{ptr: &reflection{ot: t}}
+			i++
+			opts := &options{
+				r,
+				nil, // no parent
+				cmd.delegate.Flags(),
+				fcb.md.LookupType(t.Elem()),
+			}
+			opts.declare()
+			inOpts = r.ptr.v()
+		}
+	}
+	if i < n && typeIsStringSlice(fcb.t().In(i)) {
+		i++
+		inArgs = true
+	} else {
+		cmd.delegate.Args = cobra.ExactArgs(0)
+	}
+	outErr := fcb.t().NumOut() == 1 && typeIsError(fcb.t().Out(0))
+	if i != n || fcb.t().IsVariadic() || (fcb.t().NumOut() != 0 && !outErr) {
+		ergo.Panicf("not func([*struct], [[]string]) [error]: %q", fcb.t())
+	}
+	cmd.delegate.RunE = func(_ *cobra.Command, args []string) error {
+		var in []reflect.Value
+		if inOpts != nil {
+			in = append(in, *inOpts)
+		}
+		if inArgs {
+			in = append(in, reflect.ValueOf(args))
+		}
+		out := fcb.v().Call(in)
+		if outErr {
+			return out[0].Interface().(error)
+		}
 		return nil
 	}
-	return reg.m[t.PkgPath()+"."+t.Name()]
+	return cmd
 }
 
-func (reg *registry) put(cmd *command) {
-	if cmd.opts.t.PkgPath() != "" && cmd.opts.t.Name() != "" {
-		reg.m[cmd.opts.t.PkgPath()+"."+cmd.opts.t.Name()] = cmd
-	}
+type structCommandBuilder struct {
+	reflection
+	parent *reflection
+	md     *internal.Metadata
 }
 
-var reg = registry{m: map[string]*command{}}
-
-func parseMethod(m reflect.Method) (optsT *reflect.Type, argsIn bool) {
-	if m.Type.IsVariadic() {
-		fmt.Fprintf(os.Stderr, "got: '%#v'; want: method with non-variadic inputs\n", m.Type)
-		os.Exit(1)
+func (scb *structCommandBuilder) build() *command {
+	cmd := newCommand(scb.t().Name(), scb.md)
+	opts := &options{
+		scb.reflection,
+		scb.parent,
+		cmd.delegate.PersistentFlags(),
+		scb.md,
 	}
-	i := 1
-	if i < m.Type.NumIn() && m.Type.In(i).Kind() == reflect.Struct {
-		optsT = addr(m.Type.In(i))
-		i++
-	}
-	if i < m.Type.NumIn() {
-		argsT := m.Type.In(i)
-		if argsT.Kind() == reflect.Slice && argsT.Elem().Kind() == reflect.String {
-			argsIn = true
-			i++
-			if m.Name == "Execute" {
-				fmt.Fprintf(os.Stderr, "got: '%#v'; "+
-					"want: Execute method to not have slice of strings input\n", m.Type)
-				os.Exit(1)
+	opts.declare()
+	for i := 0; i < scb.ptr.v().NumMethod(); i++ {
+		m := scb.ptr.t().Method(i)
+		// We only support pointer receivers, skip value receiver methods.
+		if _, ok := scb.t().MethodByName(m.Name); ok {
+			continue
+		}
+		var (
+			v   = scb.ptr.v().Method(i)
+			fcb = &funcCommandBuilder{
+				m.Name,
+				reflection{ov: &v},
+				scb.md.Child(m.Name),
 			}
-		}
-	}
-	if i != m.Type.NumIn() {
-		fmt.Fprintf(os.Stderr, "got: '%#v'; want: method with an optional struct input, "+
-			"followed by an optional slice of strings input\n", m.Type)
-		os.Exit(1)
-	}
-	return optsT, argsIn
-}
-
-func copyMethodToCobraCmd(m reflect.Method, s reflect.Value, cobraCmd *cobra.Command, parentID string) {
-	optsT, argsIn := parseMethod(m)
-	var opts *options
-	if optsT != nil {
-		if (*optsT).Name() != "" {
-			parentID = (*optsT).PkgPath() + "." + (*optsT).Name()
-		}
-		opts = newOptions(*optsT, cobraCmd.Flags(), parentID)
-	}
-	cobraCmd.Run = func(_ *cobra.Command, args []string) {
-		inputs := []reflect.Value{s}
-		if opts != nil {
-			inputs = append(inputs, opts.v)
-		}
-		if !argsIn && len(args) > 0 {
-			fmt.Fprintf(os.Stderr, "got unrecognized inputs: '%#v'; please run --help\n", args)
-			os.Exit(1)
-		}
-		inputs = append(inputs, reflect.ValueOf(args))
-		outs := m.Func.Call(inputs[:m.Type.NumIn()])
-		if n := len(outs); n > 0 {
-			var err error
-			if m.Type.Out(n - 1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
-				err, _ = outs[n-1].Interface().(error)
-				outs = outs[:n-1]
-			}
-			for _, out := range outs {
-				fmt.Println(out.String())
-			}
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
-				os.Exit(1)
-			}
-		}
-		os.Exit(0)
-	}
-}
-
-func typeToCommand(t reflect.Type) *command {
-	if t.Kind() != reflect.Struct {
-		fmt.Fprintf(os.Stderr, "got: '%#v'; want: struct\n", t)
-		os.Exit(1)
-	}
-	if cmd := reg.get(t); cmd != nil {
-		return cmd
-	}
-	parentID := t.PkgPath() + "." + t.Name()
-	d := docs[parentID]
-	cobraCmd := &cobra.Command{
-		Use:   d.usageOr(strings.ToLower(t.Name())),
-		Long:  d.Long,
-		Short: d.shortOrAutoGen(),
-	}
-	opts := newOptions(t, cobraCmd.PersistentFlags(), parentID)
-	cmd := &command{opts, cobraCmd}
-	reg.put(cmd)
-	if opts.parentIndex != -1 {
-		parent := typeToCommand(t.Field(opts.parentIndex).Type)
-		opts.v.Field(opts.parentIndex).Set(parent.opts.v)
-		parent.cobraCmd.AddCommand(cobraCmd)
-	}
-	for i := 0; i < t.NumMethod(); i++ {
-		m := t.Method(i)
-		tmpCobraCmd := cobraCmd
-		parentID := parentID + "." + m.Name
-		if m.Name != "Execute" {
-			d := docs[parentID]
-			tmpCobraCmd = &cobra.Command{
-				Use:   d.usageOr(strings.ToLower(m.Name)),
-				Long:  d.Long,
-				Short: d.shortOrAutoGen(),
-			}
-			cobraCmd.AddCommand(tmpCobraCmd)
-		}
-		copyMethodToCobraCmd(m, opts.v, tmpCobraCmd, parentID)
+		)
+		// TODO: maybe provide an option to default to a subcommand.
+		cmd.addCommand(fcb.build())
 	}
 	return cmd
 }
