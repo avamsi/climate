@@ -14,9 +14,9 @@ type command struct {
 	delegate cobra.Command
 }
 
-func newCommand(name string, md *internal.Metadata) *command {
+func newCommand(name string, md *internal.Metadata, params []internal.ParamType) *command {
 	delegate := cobra.Command{
-		Use:     md.Usage(name),
+		Use:     md.Usage(name, params),
 		Aliases: md.Aliases(),
 		Short:   md.Short(),
 		Long:    md.Long(),
@@ -49,21 +49,19 @@ type funcCommandBuilder struct {
 
 func (fcb *funcCommandBuilder) build() *command {
 	var (
-		cmd    = newCommand(fcb.name, fcb.md)
+		cmd    = newCommand(fcb.name, fcb.md, internal.ParamTypes(fcb.t()))
 		i      = 0
 		n      = fcb.t().NumIn()
 		inOpts *reflect.Value
-		inArgs = false
+		inArgs = internal.NoParam
 	)
 	// We support the signatures func([opts *T], [args []string]) [(err error)],
 	// which is to say all of opts, args and error are optional. If opts is
 	// present, T must be a struct (and we use its fields as flags).
 	// TODO: maybe support variadic, array and normal string arguments too.
 	if i < n {
-		t := fcb.t().In(i)
-		if typeIsStructPointer(t) {
+		if t := fcb.t().In(i); typeIsStructPointer(t) {
 			r := reflection{ptr: &reflection{ot: t}}
-			i++
 			opts := &options{
 				r,
 				nil, // no parent
@@ -71,12 +69,32 @@ func (fcb *funcCommandBuilder) build() *command {
 				fcb.md.LookupType(t.Elem()),
 			}
 			opts.declare()
+			i++
 			inOpts = r.ptr.v()
 		}
 	}
-	if i < n && typeIsStringSlice(fcb.t().In(i)) {
-		i++
-		inArgs = true
+	if i < n {
+		switch t := fcb.t().In(i); t.Kind() {
+		case reflect.String:
+			i++
+			inArgs = internal.RequiredParam
+			cmd.delegate.Args = cobra.ExactArgs(1)
+		case reflect.Pointer, reflect.Array, reflect.Slice:
+			if t.Elem().Kind() != reflect.String {
+				break
+			}
+			i++
+			switch t.Kind() {
+			case reflect.Pointer:
+				inArgs = internal.OptionalParam
+				cmd.delegate.Args = cobra.MaximumNArgs(1)
+			case reflect.Array:
+				inArgs = internal.FixedLengthParam
+				cmd.delegate.Args = cobra.ExactArgs(t.Len())
+			case reflect.Slice:
+				inArgs = internal.ArbitraryLengthParam
+			}
+		}
 	} else {
 		cmd.delegate.Args = cobra.ExactArgs(0)
 	}
@@ -89,7 +107,20 @@ func (fcb *funcCommandBuilder) build() *command {
 		if inOpts != nil {
 			in = append(in, *inOpts)
 		}
-		if inArgs {
+		switch inArgs {
+		case internal.RequiredParam:
+			in = append(in, reflect.ValueOf(args[0]))
+		case internal.OptionalParam:
+			var ptr *string
+			if len(args) == 1 {
+				ptr = &args[0]
+			}
+			in = append(in, reflect.ValueOf(ptr))
+		case internal.FixedLengthParam:
+			arr := reflect.New(fcb.t().In(n - 1)).Elem()
+			reflect.Copy(arr, reflect.ValueOf(args))
+			in = append(in, arr)
+		case internal.ArbitraryLengthParam:
 			in = append(in, reflect.ValueOf(args))
 		}
 		out := fcb.v().Call(in)
@@ -110,7 +141,7 @@ type structCommandBuilder struct {
 }
 
 func (scb *structCommandBuilder) build() *command {
-	cmd := newCommand(scb.t().Name(), scb.md)
+	cmd := newCommand(scb.t().Name(), scb.md, nil)
 	opts := &options{
 		scb.reflection,
 		scb.parent,

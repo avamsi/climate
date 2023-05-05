@@ -3,7 +3,6 @@ package internal
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
 	"go/ast"
 	"reflect"
 	"strings"
@@ -150,19 +149,14 @@ func (md *Metadata) Short() string {
 	return string(rs)
 }
 
-func (md *Metadata) Usage(name string) string {
+func (md *Metadata) Usage(name string, args []ParamType) string {
 	if md == nil {
 		return strings.ToLower(name)
 	}
 	if usage, ok := md.raw.Directives["usage"]; ok {
 		return usage
 	}
-	var usage strings.Builder
-	usage.WriteString(strings.ToLower(name))
-	for _, param := range md.raw.Params {
-		usage.WriteString(fmt.Sprintf(" [%s]", NormalizeToKebabCase(param)))
-	}
-	return usage.String()
+	return strings.ToLower(name) + ParamsUsage(md.raw.Params, args)
 }
 
 func (md *Metadata) Child(name string) *Metadata {

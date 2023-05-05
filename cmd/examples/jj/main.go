@@ -29,7 +29,7 @@ type jj struct {
 }
 
 // Create a new repo in the given directory.
-func (j *jj) Init(dir []string) {
+func (j *jj) Init(dir *string) {
 	fmt.Println("init", j, dir)
 }
 
@@ -46,7 +46,7 @@ type squashOptions struct {
 // child change will always be empty.
 //
 //climate:aliases am, amend
-func (j *jj) Squash(opts *squashOptions, paths []string) {
+func (j *jj) Squash(opts *squashOptions, paths [5]string) {
 	fmt.Println("squash", j, opts, paths)
 }
 

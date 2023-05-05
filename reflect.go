@@ -8,12 +8,8 @@ func typeIsError(t reflect.Type) bool {
 	return t.Kind() == reflect.Interface && t.Implements(errorType)
 }
 
-func typeIsStringSlice(t reflect.Type) bool {
-	return t.Kind() == reflect.Slice && t.Elem().Kind() == reflect.String
-}
-
 func typeIsStructPointer(t reflect.Type) bool {
-	return t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct
+	return t.Kind() == reflect.Pointer && t.Elem().Kind() == reflect.Struct
 }
 
 type reflection struct {
