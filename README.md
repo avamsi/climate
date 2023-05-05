@@ -1,12 +1,13 @@
 # Climate
 
 Climate "CLI Mate" aims to make creating CLIs in Go easy (and fun!), similar to
-[python-fire](https://github.com/google/python-fire). It's also built on top of
-[Cobra](https://github.com/spf13/cobra), so comes with "batteries included".
+[python-fire](https://github.com/google/python-fire).  
+It's also built on top of [Cobra](https://github.com/spf13/cobra) and so comes
+with "batteries included" (help, shell completion etc.).
 
 ## Usage
 
-https://github.com/avamsi/climate/blob/main/cmd/examples/greet/main.go
+https://github.com/avamsi/climate/blob/4e1eac8d47ce535f757f057a8da902ed1f5731c5/cmd/examples/greet/main.go#L1-L47
 
 ```
 $ greet --help
@@ -24,7 +25,7 @@ Flags:
 
 ### Subcommands
 
-https://github.com/avamsi/climate/blob/main/cmd/examples/jj/main.go
+https://github.com/avamsi/climate/blob/4e1eac8d47ce535f757f057a8da902ed1f5731c5/cmd/examples/jj/main.go#L1-L87
 
 ```
 $ jj --help
