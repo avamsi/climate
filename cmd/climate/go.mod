@@ -3,13 +3,11 @@ module github.com/avamsi/climate/cmd/climate
 go 1.20
 
 require (
-	github.com/avamsi/climate v0.0.0
+	github.com/avamsi/climate v0.0.0-20230505181852-4e1eac8d47ce
 	github.com/avamsi/ergo v0.0.0-20230504113207-f481386973ee
 	github.com/sanity-io/litter v1.5.5
 	golang.org/x/tools v0.8.0
 )
-
-replace github.com/avamsi/climate v0.0.0 => ../..
 
 require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
