@@ -94,7 +94,9 @@ func (fcb *funcCommandBuilder) build() *command {
 		}
 		out := fcb.v().Call(in)
 		if outErr {
-			return out[0].Interface().(error)
+			if err := out[0].Interface(); err != nil {
+				return err.(error)
+			}
 		}
 		return nil
 	}
