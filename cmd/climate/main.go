@@ -10,7 +10,7 @@ import (
 	"github.com/avamsi/climate"
 	"github.com/avamsi/climate/internal"
 
-	"github.com/avamsi/ergo"
+	"github.com/avamsi/ergo/panic"
 	"github.com/sanity-io/litter"
 	"golang.org/x/tools/go/packages"
 )
@@ -18,10 +18,10 @@ import (
 func parseFunc(f *ast.FuncDecl, pkgMd *internal.RawMetadata) {
 	parentMd := pkgMd
 	if f.Recv != nil {
-		ergo.Assertf(len(f.Recv.List) == 1,
+		panic.Assertf(len(f.Recv.List) == 1,
 			"not exactly one receiver: %s", litter.Sdump(f.Recv.List))
 		recv := f.Recv.List[0]
-		ergo.Assertf(len(recv.Names) == 1,
+		panic.Assertf(len(recv.Names) == 1,
 			"not exactly one receiver: %s", litter.Sdump(recv.Names))
 		// We only support pointer receivers, skip others.
 		e, ok := recv.Type.(*ast.StarExpr)
@@ -101,8 +101,8 @@ func parse(opts *parseOptions) {
 		mode   = (packages.NeedName | packages.NeedFiles |
 			packages.NeedTypes | packages.NeedTypesInfo)
 		cfg     = &packages.Config{Mode: mode}
-		pkgs    = ergo.Must1(packages.Load(cfg, "./..."))
-		rootDir = ergo.Must1(filepath.Abs(ergo.Must1(os.Getwd())))
+		pkgs    = panic.Must1(packages.Load(cfg, "./..."))
+		rootDir = panic.Must1(filepath.Abs(panic.Must1(os.Getwd())))
 	)
 	for _, pkg := range pkgs {
 		if pkg.Name == "main" && pkgDir(pkg) != rootDir {
@@ -113,13 +113,13 @@ func parse(opts *parseOptions) {
 	}
 	var (
 		flag = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-		out  = ergo.Must1(os.OpenFile(opts.Out, flag, 0o644))
+		out  = panic.Must1(os.OpenFile(opts.Out, flag, 0o644))
 	)
 	defer out.Close()
 	if opts.Debug {
 		litter.Dump(rootMd)
 	}
-	ergo.Must1(out.Write(rootMd.Encode()))
+	panic.Must1(out.Write(rootMd.Encode()))
 }
 
 //go:generate go run github.com/avamsi/climate/cmd/climate --out=md.climate
