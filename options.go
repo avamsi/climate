@@ -110,6 +110,7 @@ type options struct {
 }
 
 func (opts *options) declare() {
+	opts.fset.SortFlags = false
 	parentSet := (opts.parent == nil)
 	for i := 0; i < opts.t().NumField(); i++ {
 		var (
