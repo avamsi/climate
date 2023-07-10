@@ -6,7 +6,6 @@ import (
 
 	"github.com/avamsi/climate/internal"
 
-	"github.com/avamsi/ergo/panic"
 	"github.com/spf13/pflag"
 )
 
@@ -91,13 +90,13 @@ func (opt *option) declare() bool {
 				sliceParser(parseString),
 			)
 		default:
-			panic.Panicf("not []bool | []Signed | []Float | []string: %q", e)
+			internal.Panicf("not []bool | []Signed | []Float | []string: %q", e)
 		}
 	default:
 		if typeIsStructPointer(opt.t) {
 			return false
 		}
-		panic.Panicf("not bool | Integer | Float | string | []T: %q", opt.t)
+		internal.Panicf("not bool | Integer | Float | string | []T: %q", opt.t)
 	}
 	return true
 }
@@ -138,15 +137,15 @@ func (opts *options) declare() {
 		}
 		if !opt.declare() {
 			if opts.parent == nil {
-				panic.Panicf("not bool | Integer | Float | string | []T: %q", f.Type)
+				internal.Panicf("not bool | Integer | Float | string | []T: %q", f.Type)
 			}
 			if f.Type != opts.parent.ptr.t() {
-				panic.Panicf(
+				internal.Panicf(
 					"not bool | Integer | Float | string | []T | %q: %q",
 					opts.parent.t(), f.Type)
 			}
 			if parentSet {
-				panic.Panicf("more than one parent: %q", f.Type)
+				internal.Panicf("more than one parent: %q", f.Type)
 			}
 			v.Set(*opts.parent.ptr.v())
 		}

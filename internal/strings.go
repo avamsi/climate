@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/avamsi/ergo/panic"
+	"github.com/avamsi/ergo/check"
 	"golang.org/x/text/runes"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
@@ -25,7 +25,8 @@ var (
 func NormalizeToKebabCase(s string) string {
 	// Decompose and remove all non-spacing marks.
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)))
-	s, _ = panic.Must2(transform.String(t, s))
+	s, _, err := transform.String(t, s)
+	check.Nil(err)
 	s = anyUpperishLower.ReplaceAllString(s, "${1}-${2}${3}")
 	s = lowerishUpper.ReplaceAllString(s, "${1}-${2}")
 	s = invalids.ReplaceAllString(s, "-")

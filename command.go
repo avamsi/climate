@@ -5,7 +5,6 @@ import (
 
 	"github.com/avamsi/climate/internal"
 
-	"github.com/avamsi/ergo/panic"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -104,7 +103,7 @@ func (fcb *funcCommandBuilder) build() *command {
 	}
 	outErr := fcb.t().NumOut() == 1 && typeIsError(fcb.t().Out(0))
 	if i != n || fcb.t().IsVariadic() || (fcb.t().NumOut() != 0 && !outErr) {
-		panic.Panicf("not func([*struct], [[]string]) [error]: %q", fcb.t())
+		internal.Panicf("not func([*struct], [[]string]) [error]: %q", fcb.t())
 	}
 	cmd.delegate.RunE = func(_ *cobra.Command, args []string) error {
 		var in []reflect.Value

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/avamsi/ergo/panic"
+	"github.com/avamsi/ergo/check"
 	"github.com/sanity-io/litter"
 )
 
@@ -37,7 +37,7 @@ func (rmd *RawMetadata) SetDoc(doc *ast.CommentGroup) {
 		d, value, _ := strings.Cut(comment.Text, " ")
 		d = strings.TrimPrefix(d, directivePrefix)
 		if _, ok := rmd.Directives[d]; ok {
-			panic.Panicf("more than one %q directive: %s", d, litter.Sdump(doc))
+			Panicf("more than one %q directive: %s", d, litter.Sdump(doc))
 		}
 		rmd.Directives[d] = strings.TrimSpace(value)
 	}
@@ -61,7 +61,7 @@ func (rmd *RawMetadata) Child(name string) *RawMetadata {
 
 func (rmd *RawMetadata) Encode() []byte {
 	var b bytes.Buffer
-	panic.Must0(gob.NewEncoder(&b).Encode(rmd))
+	check.Nil(gob.NewEncoder(&b).Encode(rmd))
 	return b.Bytes()
 }
 
@@ -73,7 +73,7 @@ type Metadata struct {
 
 func DecodeMetadata(b []byte) *Metadata {
 	var raw RawMetadata
-	panic.Must0(gob.NewDecoder(bytes.NewReader(b)).Decode(&raw))
+	check.Nil(gob.NewDecoder(bytes.NewReader(b)).Decode(&raw))
 	md := &Metadata{raw: &raw}
 	md.root = md
 	return md

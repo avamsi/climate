@@ -4,7 +4,7 @@ import (
 	"reflect"
 
 	"github.com/avamsi/climate/internal"
-	"github.com/avamsi/ergo/panic"
+	"github.com/avamsi/ergo/check"
 )
 
 type plan interface {
@@ -13,7 +13,7 @@ type plan interface {
 
 func Func(f any) *funcPlan {
 	t := reflect.TypeOf(f)
-	panic.Assertf(t.Kind() == reflect.Func, "not a func: %q", t)
+	check.Truef(t.Kind() == reflect.Func, "not a func: %q", t)
 	v := reflect.ValueOf(f)
 	return &funcPlan{reflection{ot: t, ov: &v}}
 }
@@ -25,7 +25,7 @@ func Struct[T any](subcommands ...*structPlan) *structPlan {
 		ptr = reflect.TypeOf((*T)(nil))
 		t   = ptr.Elem()
 	)
-	panic.Assertf(t.Kind() == reflect.Struct, "not a struct: %q", t)
+	check.Truef(t.Kind() == reflect.Struct, "not a struct: %q", t)
 	return &structPlan{
 		reflection{ptr: &reflection{ot: ptr}, ot: t},
 		subcommands,
