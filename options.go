@@ -110,7 +110,6 @@ type options struct {
 }
 
 func (opts *options) declare() {
-	opts.fset.SortFlags = false
 	parentSet := (opts.parent == nil)
 	for i := 0; i < opts.t().NumField(); i++ {
 		var (
@@ -123,15 +122,17 @@ func (opts *options) declare() {
 		if usage == "" {
 			usage = md.Short()
 		}
-		v := opts.v().Field(i)
-		opt := option{
-			fset:      opts.fset,
-			t:         f.Type,
-			p:         v.Addr().UnsafePointer(),
-			name:      f.Name,
-			shorthand: f.Tag.Get("short"),
-			usage:     usage,
-		}
+		var (
+			v   = opts.v().Field(i)
+			opt = option{
+				fset:      opts.fset,
+				t:         f.Type,
+				p:         v.Addr().UnsafePointer(),
+				name:      f.Name,
+				shorthand: f.Tag.Get("short"),
+				usage:     usage,
+			}
+		)
 		if value, ok := f.Tag.Lookup("default"); ok {
 			opt.value = &value
 		}

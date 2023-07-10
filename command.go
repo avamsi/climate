@@ -21,6 +21,8 @@ func newCommand(name string, md *internal.Metadata, params []internal.ParamType)
 		Short:   md.Short(),
 		Long:    md.Long(),
 	}
+	delegate.Flags().SortFlags = false
+	delegate.PersistentFlags().SortFlags = false
 	if md != nil {
 		delegate.DisableFlagsInUseLine = true
 	}
@@ -61,13 +63,15 @@ func (fcb *funcCommandBuilder) build() *command {
 	// TODO: maybe support variadic, array and normal string arguments too.
 	if i < n {
 		if t := fcb.t().In(i); typeIsStructPointer(t) {
-			r := reflection{ptr: &reflection{ot: t}}
-			opts := &options{
-				r,
-				nil, // no parent
-				cmd.delegate.Flags(),
-				fcb.md.LookupType(t.Elem()),
-			}
+			var (
+				r    = reflection{ptr: &reflection{ot: t}}
+				opts = &options{
+					r,
+					nil, // no parent
+					cmd.delegate.Flags(),
+					fcb.md.LookupType(t.Elem()),
+				}
+			)
 			opts.declare()
 			i++
 			inOpts = r.ptr.v()
@@ -141,13 +145,15 @@ type structCommandBuilder struct {
 }
 
 func (scb *structCommandBuilder) build() *command {
-	cmd := newCommand(scb.t().Name(), scb.md, nil)
-	opts := &options{
-		scb.reflection,
-		scb.parent,
-		cmd.delegate.PersistentFlags(),
-		scb.md,
-	}
+	var (
+		cmd  = newCommand(scb.t().Name(), scb.md, nil)
+		opts = &options{
+			scb.reflection,
+			scb.parent,
+			cmd.delegate.PersistentFlags(),
+			scb.md,
+		}
+	)
 	opts.declare()
 	for i := 0; i < scb.ptr.v().NumMethod(); i++ {
 		m := scb.ptr.t().Method(i)
