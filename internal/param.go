@@ -20,6 +20,9 @@ func ParamTypes(f reflect.Type) []ParamType {
 	var types []ParamType
 	for i := 0; i < f.NumIn(); i++ {
 		switch f.In(i).Kind() {
+		case reflect.Interface:
+			// Only context.Context for now, which counts as NoParam for CLI.
+			types = append(types, NoParam)
 		case reflect.String:
 			types = append(types, RequiredParam)
 		case reflect.Pointer:
