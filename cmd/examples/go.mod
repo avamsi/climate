@@ -13,7 +13,7 @@ replace (
 )
 
 require (
-	github.com/avamsi/ergo v0.0.0-20230706090847-de475a19d1f1 // indirect
+	github.com/avamsi/ergo v0.0.0-20230719202949-192c6ad84dcc // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/sanity-io/litter v1.5.5 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect

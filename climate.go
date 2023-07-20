@@ -1,14 +1,16 @@
 package climate
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/avamsi/climate/internal"
+
 	"github.com/avamsi/ergo/check"
 )
 
 type plan interface {
-	execute(*internal.Metadata) error
+	execute(context.Context, *internal.Metadata) error
 }
 
 func Func(f any) *funcPlan {
@@ -53,8 +55,10 @@ func Run(p plan, mods ...func(*runOptions)) int {
 	if opts.metadata != nil {
 		md = internal.DecodeMetadata(*opts.metadata)
 	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	// We already print the error to stderr, so just return exit code here.
-	if p.execute(md) != nil {
+	if p.execute(ctx, md) != nil {
 		return 1
 	}
 	return 0

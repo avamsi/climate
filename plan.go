@@ -1,6 +1,7 @@
 package climate
 
 import (
+	"context"
 	"runtime"
 	"strings"
 
@@ -11,7 +12,7 @@ type funcPlan struct {
 	reflection
 }
 
-func (fp *funcPlan) execute(md *internal.Metadata) error {
+func (fp *funcPlan) execute(ctx context.Context, md *internal.Metadata) error {
 	var (
 		name = runtime.FuncForPC(fp.v().Pointer()).Name()
 		dot  = strings.LastIndex(name, ".")
@@ -23,7 +24,7 @@ func (fp *funcPlan) execute(md *internal.Metadata) error {
 		md.Lookup(pkgPath, name),
 	}
 	cmd := fcb.build()
-	return cmd.run()
+	return cmd.run(ctx)
 }
 
 type structPlan struct {
@@ -44,7 +45,7 @@ func (sp *structPlan) buildRecursive(parent *reflection, md *internal.Metadata) 
 	return cmd
 }
 
-func (sp *structPlan) execute(m *internal.Metadata) error {
+func (sp *structPlan) execute(ctx context.Context, m *internal.Metadata) error {
 	root := sp.buildRecursive(nil, m) // no parent
-	return root.run()
+	return root.run(ctx)
 }

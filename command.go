@@ -1,6 +1,7 @@
 package climate
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/avamsi/climate/internal"
@@ -32,14 +33,14 @@ func (cmd *command) addCommand(sub *command) {
 	cmd.delegate.AddCommand(&sub.delegate)
 }
 
-func (cmd *command) run() error {
+func (cmd *command) run(ctx context.Context) error {
 	normalize := func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
 		return pflag.NormalizedName(internal.NormalizeToKebabCase(name))
 	}
 	// While we prefer kebab-case for flags, we do support other well-formed,
 	// cases through normalization (but only kebab-case shows up in --help).
 	cmd.delegate.SetGlobalNormalizationFunc(normalize)
-	return cmd.delegate.Execute()
+	return cmd.delegate.ExecuteContext(ctx)
 }
 
 type funcCommandBuilder struct {
@@ -53,13 +54,19 @@ func (fcb *funcCommandBuilder) build() *command {
 		cmd    = newCommand(fcb.name, fcb.md, internal.ParamTypes(fcb.t()))
 		i      = 0
 		n      = fcb.t().NumIn()
+		inCtx  bool
 		inOpts *reflect.Value
 		inArgs = internal.NoParam
 	)
-	// We support the signatures func([opts *T], [args []string]) [(err error)],
-	// which is to say all of opts, args and error are optional. If opts is
+	// We support the signatures (excuse the partial [optional] notation)
+	// func([ctx context.Context], [opts *T], [args []string]) [(err error)],
+	// which is to say all of ctx, opts, args and error are optional. If opts is
 	// present, T must be a struct (and we use its fields as flags).
 	// TODO: maybe support variadic, array and normal string arguments too.
+	if i < n && typeIsContext(fcb.t().In(i)) {
+		i++
+		inCtx = true
+	}
 	if i < n {
 		if t := fcb.t().In(i); typeIsStructPointer(t) {
 			var (
@@ -103,10 +110,13 @@ func (fcb *funcCommandBuilder) build() *command {
 	}
 	outErr := fcb.t().NumOut() == 1 && typeIsError(fcb.t().Out(0))
 	if i != n || fcb.t().IsVariadic() || (fcb.t().NumOut() != 0 && !outErr) {
-		internal.Panicf("not func([*struct], [[]string]) [error]: %q", fcb.t())
+		internal.Panicf("not func([context.Context], [*struct], [[]string]) [error]: %q", fcb.t())
 	}
-	cmd.delegate.RunE = func(_ *cobra.Command, args []string) error {
+	cmd.delegate.RunE = func(cmd *cobra.Command, args []string) error {
 		var in []reflect.Value
+		if inCtx {
+			in = append(in, reflect.ValueOf(cmd.Context()))
+		}
 		if inOpts != nil {
 			in = append(in, *inOpts)
 		}

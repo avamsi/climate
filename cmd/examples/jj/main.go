@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"os"
 
 	_ "embed"
 
@@ -29,8 +31,8 @@ type jj struct {
 }
 
 // Create a new repo in the given directory.
-func (j *jj) Init(dir *string) {
-	fmt.Println("init", j, dir)
+func (j *jj) Init(ctx context.Context, dir *string) {
+	fmt.Println("init", ctx, j, dir)
 }
 
 type squashOptions struct {
@@ -81,7 +83,7 @@ func main() {
 	//         export
 	//     util
 	//         completion
-	climate.Run(
+	os.Exit(climate.Run(
 		climate.Struct[jj](climate.Struct[git](), climate.Struct[util.Util]()),
-		climate.Metadata(md))
+		climate.Metadata(md)))
 }

@@ -1,7 +1,7 @@
-github.com/avamsi/climate v0.0.0-20230706091529-5896ecd9fb7b h1:6oybXTi4rOXXHH1uRIvtaRT5U+xh83jGVE9nfk6BA2k=
-github.com/avamsi/climate v0.0.0-20230706091529-5896ecd9fb7b/go.mod h1:Fd67Lh1RfBqTkv71pUsOWN+kYKuykLBMH1wcbmVF6t0=
-github.com/avamsi/ergo v0.0.0-20230706090847-de475a19d1f1 h1:MteDoDIxOMlGLxNzfijHfSB2IYBJaOx/6h2J+Vrllg8=
-github.com/avamsi/ergo v0.0.0-20230706090847-de475a19d1f1/go.mod h1:0mfFMF4gcydxZBrgNqByISJqS9TsgzJIbkwnQFDeY3U=
+github.com/avamsi/climate v0.0.0-20230720054128-bbbf8e1d62cf h1:47ZpL4PmoaKSCuN+lL/t+Kk+II/ifvz66933SvNMcYU=
+github.com/avamsi/climate v0.0.0-20230720054128-bbbf8e1d62cf/go.mod h1:Fd67Lh1RfBqTkv71pUsOWN+kYKuykLBMH1wcbmVF6t0=
+github.com/avamsi/ergo v0.0.0-20230719202949-192c6ad84dcc h1:uP9/QqK4HtyKGHkkEJ8AAl6xqwCJ29PAudXtXhgNaZs=
+github.com/avamsi/ergo v0.0.0-20230719202949-192c6ad84dcc/go.mod h1:0mfFMF4gcydxZBrgNqByISJqS9TsgzJIbkwnQFDeY3U=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v0.0.0-20161028175848-04cdfd42973b/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

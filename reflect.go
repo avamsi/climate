@@ -1,6 +1,15 @@
 package climate
 
-import "reflect"
+import (
+	"context"
+	"reflect"
+)
+
+var contextType = reflect.TypeOf((*context.Context)(nil)).Elem()
+
+func typeIsContext(t reflect.Type) bool {
+	return t.Kind() == reflect.Interface && t.Implements(contextType)
+}
 
 var errorType = reflect.TypeOf((*error)(nil)).Elem()
 

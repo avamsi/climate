@@ -3,8 +3,8 @@ module github.com/avamsi/climate/cmd/climate
 go 1.20
 
 require (
-	github.com/avamsi/climate v0.0.0-20230706091529-5896ecd9fb7b
-	github.com/avamsi/ergo v0.0.0-20230706090847-de475a19d1f1
+	github.com/avamsi/climate v0.0.0-20230720054128-bbbf8e1d62cf
+	github.com/avamsi/ergo v0.0.0-20230719202949-192c6ad84dcc
 	github.com/sanity-io/litter v1.5.5
 	golang.org/x/tools v0.11.0
 )

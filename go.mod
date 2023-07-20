@@ -3,7 +3,7 @@ module github.com/avamsi/climate
 go 1.20
 
 require (
-	github.com/avamsi/ergo v0.0.0-20230706090847-de475a19d1f1
+	github.com/avamsi/ergo v0.0.0-20230719202949-192c6ad84dcc
 	github.com/google/go-cmp v0.5.9
 	github.com/sanity-io/litter v1.5.5
 	github.com/spf13/cobra v1.7.0
