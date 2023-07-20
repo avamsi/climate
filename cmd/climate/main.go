@@ -21,8 +21,6 @@ func parseFunc(f *ast.FuncDecl, pkgMd *internal.RawMetadata) {
 		check.Truef(len(f.Recv.List) == 1,
 			"not exactly one receiver: %s", litter.Sdump(f.Recv.List))
 		recv := f.Recv.List[0]
-		check.Truef(len(recv.Names) == 1,
-			"not exactly one receiver: %s", litter.Sdump(recv.Names))
 		// We only support pointer receivers, skip others.
 		e, ok := recv.Type.(*ast.StarExpr)
 		if !ok {
