@@ -49,6 +49,66 @@ type funcCommandBuilder struct {
 	md *internal.Metadata
 }
 
+type runSignature struct {
+	numIn  int
+	inCtx  bool
+	inOpts *reflect.Value
+	inArgs internal.ParamType
+	outErr bool
+}
+
+func (fcb *funcCommandBuilder) run(sig *runSignature) func(cmd *cobra.Command, args []string) error {
+	return func(cmd *cobra.Command, args []string) error {
+		var in []reflect.Value
+		if sig.inCtx {
+			in = append(in, reflect.ValueOf(cmd.Context()))
+		}
+		if sig.inOpts != nil {
+			in = append(in, *sig.inOpts)
+		}
+		switch sig.inArgs {
+		case internal.RequiredParam:
+			in = append(in, reflect.ValueOf(args[0]))
+		case internal.OptionalParam:
+			var ptr *string
+			if len(args) == 1 {
+				ptr = &args[0]
+			}
+			in = append(in, reflect.ValueOf(ptr))
+		case internal.FixedLengthParam:
+			arr := reflect.New(fcb.t().In(sig.numIn - 1)).Elem()
+			reflect.Copy(arr, reflect.ValueOf(args))
+			in = append(in, arr)
+		case internal.ArbitraryLengthParam:
+			in = append(in, reflect.ValueOf(args))
+		}
+		out := fcb.v().Call(in)
+		if sig.outErr {
+			err := out[0].Interface()
+			if err == nil { // if _no_ error
+				return nil
+			}
+			switch err := err.(type) {
+			case *usageError:
+				// Let Cobra print both the error and usage information.
+			case *exitError:
+				// exitError may just be used to exit with a particular exit
+				// code and not neccessarily have anything to print.
+				if len(err.errs) == 0 {
+					cmd.SilenceErrors = true
+				}
+				// Here and below, err is not a usage error, so set SilenceUsage
+				// to true to prevent Cobra from printing usage information.
+				cmd.SilenceUsage = true
+			default:
+				cmd.SilenceUsage = true
+			}
+			return err.(error)
+		}
+		return nil
+	}
+}
+
 func (fcb *funcCommandBuilder) build() *command {
 	var (
 		cmd    = newCommand(fcb.name, fcb.md, internal.ParamTypes(fcb.t()))
@@ -112,55 +172,7 @@ func (fcb *funcCommandBuilder) build() *command {
 	if i != n || fcb.t().IsVariadic() || (fcb.t().NumOut() != 0 && !outErr) {
 		internal.Panicf("not func([context.Context], [*struct], [[]string]) [error]: %q", fcb.t())
 	}
-	cmd.delegate.RunE = func(cmd *cobra.Command, args []string) error {
-		var in []reflect.Value
-		if inCtx {
-			in = append(in, reflect.ValueOf(cmd.Context()))
-		}
-		if inOpts != nil {
-			in = append(in, *inOpts)
-		}
-		switch inArgs {
-		case internal.RequiredParam:
-			in = append(in, reflect.ValueOf(args[0]))
-		case internal.OptionalParam:
-			var ptr *string
-			if len(args) == 1 {
-				ptr = &args[0]
-			}
-			in = append(in, reflect.ValueOf(ptr))
-		case internal.FixedLengthParam:
-			arr := reflect.New(fcb.t().In(n - 1)).Elem()
-			reflect.Copy(arr, reflect.ValueOf(args))
-			in = append(in, arr)
-		case internal.ArbitraryLengthParam:
-			in = append(in, reflect.ValueOf(args))
-		}
-		out := fcb.v().Call(in)
-		if outErr {
-			err := out[0].Interface()
-			if err == nil { // if _no_ error
-				return nil
-			}
-			switch err := err.(type) {
-			case *usageError:
-				// Let Cobra print both the error and usage information.
-			case *exitError:
-				// exitError may just be used to exit with a particular exit
-				// code and not neccessarily have anything to print.
-				if len(err.errs) == 0 {
-					cmd.SilenceErrors = true
-				}
-				// Here and below, err is not a usage error, so set SilenceUsage
-				// to true to prevent Cobra from printing usage information.
-				cmd.SilenceUsage = true
-			default:
-				cmd.SilenceUsage = true
-			}
-			return err.(error)
-		}
-		return nil
-	}
+	cmd.delegate.RunE = fcb.run(&runSignature{n, inCtx, inOpts, inArgs, outErr})
 	return cmd
 }
 
