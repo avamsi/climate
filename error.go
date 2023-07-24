@@ -1,27 +1,20 @@
 package climate
 
-import (
-	"errors"
-	"fmt"
-)
+import "errors"
 
 type usageError struct {
-	err error
-}
-
-func (uerr *usageError) Error() string {
-	return uerr.err.Error()
+	error
 }
 
 func (uerr *usageError) Unwrap() error {
-	return uerr.err
+	return uerr.error
 }
 
 func ErrUsage(err error) *usageError {
-	if err == nil { // if _no_ error
-		return nil
+	if err != nil {
+		return &usageError{err}
 	}
-	return &usageError{err}
+	return nil
 }
 
 type exitError struct {
@@ -30,11 +23,9 @@ type exitError struct {
 }
 
 func (eerr *exitError) Error() string {
-	var text string
-	if err := errors.Join(eerr.errs...); err != nil {
-		text = err.Error()
-	}
-	return fmt.Sprintf("%d: %s", eerr.code, text)
+	// We panic here if errs is empty, but this is somewhat intentional as we
+	// should only use the error for exit code purposes in that case.
+	return errors.Join(eerr.errs...).Error()
 }
 
 func (eerr *exitError) Unwrap() []error {
