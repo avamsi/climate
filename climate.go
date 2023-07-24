@@ -2,6 +2,7 @@ package climate
 
 import (
 	"context"
+	"errors"
 	"reflect"
 
 	"github.com/avamsi/climate/internal"
@@ -57,8 +58,12 @@ func Run(p plan, mods ...func(*runOptions)) int {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	// We already print the error to stderr, so just return exit code here.
-	if p.execute(ctx, md) != nil {
+	// Cobra already prints the error to stderr, so just return exit code here.
+	if err := p.execute(ctx, md); err != nil {
+		var eerr *exitError
+		if errors.As(err, &eerr) {
+			return eerr.code
+		}
 		return 1
 	}
 	return 0

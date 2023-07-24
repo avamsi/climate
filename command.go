@@ -138,9 +138,26 @@ func (fcb *funcCommandBuilder) build() *command {
 		}
 		out := fcb.v().Call(in)
 		if outErr {
-			if err := out[0].Interface(); err != nil {
-				return err.(error)
+			err := out[0].Interface()
+			if err == nil { // if _no_ error
+				return nil
 			}
+			switch err := err.(type) {
+			case *usageError:
+				// Let Cobra print both the error and usage information.
+			case *exitError:
+				// exitError may just be used to exit with a particular exit
+				// code and not neccessarily have anything to print.
+				if len(err.errs) == 0 {
+					cmd.SilenceErrors = true
+				}
+				// Here and below, err is not a usage error, so set SilenceUsage
+				// to true to prevent Cobra from printing usage information.
+				cmd.SilenceUsage = true
+			default:
+				cmd.SilenceUsage = true
+			}
+			return err.(error)
 		}
 		return nil
 	}
