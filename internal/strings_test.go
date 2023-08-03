@@ -1,6 +1,10 @@
-package internal
+package internal_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/avamsi/climate/internal"
+)
 
 func TestNormalizeToKebabCase(t *testing.T) {
 	tests := []struct {
@@ -60,7 +64,7 @@ func TestNormalizeToKebabCase(t *testing.T) {
 		},
 	}
 	for _, tc := range tests {
-		if got := NormalizeToKebabCase(tc.in); got != tc.want {
+		if got := internal.NormalizeToKebabCase(tc.in); got != tc.want {
 			t.Errorf("normalizeToKebabCase(%#v) = %#v, want %#v", tc.in, got, tc.want)
 		}
 	}

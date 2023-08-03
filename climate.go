@@ -5,9 +5,9 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/avamsi/climate/internal"
-
 	"github.com/avamsi/ergo/check"
+
+	"github.com/avamsi/climate/internal"
 )
 
 type plan interface {

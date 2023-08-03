@@ -12,16 +12,21 @@ import (
 // Exported struct fields are automatically declared as flags --
 //	1. Field names are converted to kebab-case and are used as flag names.
 //	   That said, users can pass flags in camelCase, PascalCase, snake_case or
-//	   SCREAMING_SNAKE_CASE and everything just works.
+//	   SCREAMING_SNAKE_CASE and everything just works (thanks to normalization).
 //	2. Field types are used as flag types (string, bool, int, etc.).
-//	3. "short" field tags are used as short flag names (as is).
+//	3. "short" subfield tags (under the "climate" tags) are used as short flag
+//	   names (as is). It's also possible to omit the value, in which case the
+//	   first letter of the field name is used.
 //	4. "default" field tags are used as default values (of course, with
 //	   automatic type conversion from raw string to the actual field type).
 //	5. Field docs / comments are used* as flag usage strings (as is).
+//	6. "required" subfield tags (under the "climate" tags) are used to mark the
+//	   flags as required (i.e., the command is errored out without these flags).
 
 type greetOptions struct {
-	Greeting string `short:"g" default:"Hello"` // greeting to use
-	Name     string `short:"n" default:"World"` // name to greet
+	Greeting string `climate:"short" default:"Hello"`   // greeting to use
+	Name     string `climate:"short=n" default:"World"` // name to greet
+	Times    int    `climate:"short,required"`          // number of times to greet
 }
 
 // Func is automatically converted to a command --
@@ -34,7 +39,9 @@ type greetOptions struct {
 
 // Greet someone.
 func greet(opts *greetOptions) {
-	fmt.Printf("%s, %s!\n", opts.Greeting, opts.Name)
+	for i := 0; i < opts.Times; i++ {
+		fmt.Printf("%s, %s!\n", opts.Greeting, opts.Name)
+	}
 }
 
 // * These only work if you generate and pass along "metadata" like below --

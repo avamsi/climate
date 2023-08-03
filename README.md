@@ -19,8 +19,9 @@ Usage:
 
 Flags:
   -g, --greeting string   greeting to use (default "Hello")
-  -h, --help              help for greet
   -n, --name string       name to greet (default "World")
+  -t, --times int         number of times to greet
+  -h, --help              help for greet
 ```
 
 ### Subcommands

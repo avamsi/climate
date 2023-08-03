@@ -26,7 +26,7 @@ import (
 
 // Jujutsu (an experimental VCS).
 type jj struct {
-	Repository        string `short:"R"` // `path` to the repo to operate on
+	Repository        string `climate:"short=R"` // `path` to the repo to operate on
 	IgnoreWorkingCopy bool   // don't snapshot / update the working copy
 }
 
@@ -36,7 +36,7 @@ func (j *jj) Init(ctx context.Context, dir *string) {
 }
 
 type squashOptions struct {
-	Revision    string `short:"r" default:"@"`
+	Revision    string `climate:"short" default:"@"`
 	Interactive bool   `short:"i"` // interactively choose which parts to squash
 }
 

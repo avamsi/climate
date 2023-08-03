@@ -4,10 +4,10 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/avamsi/climate/internal"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/avamsi/climate/internal"
 )
 
 type command struct {
@@ -93,7 +93,7 @@ func (fcb *funcCommandBuilder) run(sig *runSignature) func(cmd *cobra.Command, a
 				// Let Cobra print both the error and usage information.
 			case *exitError:
 				// exitError may just be used to exit with a particular exit
-				// code and not neccessarily have anything to print.
+				// code and not necessarily have anything to print.
 				if len(err.errs) == 0 {
 					cmd.SilenceErrors = true
 				}

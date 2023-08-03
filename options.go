@@ -2,22 +2,56 @@ package climate
 
 import (
 	"reflect"
+	"strings"
 	"unsafe"
 
-	"github.com/avamsi/climate/internal"
-
+	"github.com/avamsi/ergo/check"
+	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/exp/utf8string"
+
+	"github.com/avamsi/climate/internal"
 )
 
 type flagTypeVarP[T any] func(*T, string, string, T, string)
 
+type tags struct {
+	m map[string]string
+}
+
+func newTags(st reflect.StructTag) tags {
+	m := make(map[string]string)
+	if v, ok := st.Lookup("default"); ok {
+		m["default"] = v
+	}
+	for _, kv := range strings.Split(st.Get("climate"), ",") {
+		k, v, _ := strings.Cut(kv, "=")
+		m[k] = v
+	}
+	return tags{m}
+}
+
+func (ts tags) shorthand() string {
+	return ts.m["short"]
+}
+
+func (ts tags) defaultValue() (string, bool) {
+	v, ok := ts.m["default"]
+	return v, ok
+}
+
+func (ts tags) required() bool {
+	_, ok := ts.m["required"]
+	return ok
+}
+
 type option struct {
-	fset            *pflag.FlagSet
-	t               reflect.Type
-	p               unsafe.Pointer
-	name, shorthand string
-	value           *string
-	usage           string
+	fset *pflag.FlagSet
+	t    reflect.Type
+	p    unsafe.Pointer
+	name string
+	tags
+	usage string
 }
 
 func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParser[T]) {
@@ -25,10 +59,18 @@ func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParse
 		p     = (*T)(opt.p)
 		value T
 	)
-	if opt.value != nil {
-		value = typer(*opt.value)
+	if v, ok := opt.defaultValue(); ok {
+		value = typer(v)
 	}
-	flagVarP(p, opt.name, opt.shorthand, value, opt.usage)
+	check.Truef(utf8string.NewString(opt.name).IsASCII(), "not ASCII: %q", opt.name)
+	shorthand := opt.shorthand()
+	if shorthand == "" {
+		shorthand = strings.ToLower(opt.name[:1])
+	}
+	flagVarP(p, opt.name, shorthand, value, opt.usage)
+	if opt.required() {
+		check.Nil(cobra.MarkFlagRequired(opt.fset, opt.name))
+	}
 }
 
 func (opt *option) declare() bool {
@@ -124,17 +166,14 @@ func (opts *options) declare() {
 		var (
 			v   = opts.v().Field(i)
 			opt = option{
-				fset:      opts.fset,
-				t:         f.Type,
-				p:         v.Addr().UnsafePointer(),
-				name:      f.Name,
-				shorthand: f.Tag.Get("short"),
-				usage:     usage,
+				fset:  opts.fset,
+				t:     f.Type,
+				p:     v.Addr().UnsafePointer(),
+				name:  f.Name,
+				tags:  newTags(f.Tag),
+				usage: usage,
 			}
 		)
-		if value, ok := f.Tag.Lookup("default"); ok {
-			opt.value = &value
-		}
 		if !opt.declare() {
 			if opts.parent == nil {
 				internal.Panicf("not bool | Integer | Float | string | []T: %q", f.Type)
