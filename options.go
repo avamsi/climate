@@ -31,8 +31,9 @@ func newTags(st reflect.StructTag) tags {
 	return tags{m}
 }
 
-func (ts tags) shorthand() string {
-	return ts.m["short"]
+func (ts tags) shorthand() (string, bool) {
+	v, ok := ts.m["short"]
+	return v, ok
 }
 
 func (ts tags) defaultValue() (string, bool) {
@@ -63,9 +64,12 @@ func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParse
 		value = typer(v)
 	}
 	check.Truef(utf8string.NewString(opt.name).IsASCII(), "not ASCII: %q", opt.name)
-	shorthand := opt.shorthand()
-	if shorthand == "" {
-		shorthand = strings.ToLower(opt.name[:1])
+	var shorthand string
+	if v, ok := opt.shorthand(); ok {
+		if v == "" {
+			v = strings.ToLower(opt.name[:1])
+		}
+		shorthand = v
 	}
 	flagVarP(p, opt.name, shorthand, value, opt.usage)
 	if opt.required() {
