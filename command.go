@@ -4,9 +4,14 @@ import (
 	"context"
 	"os/exec"
 	"reflect"
+	"runtime/debug"
+	"strconv"
+	"time"
 
+	"github.com/avamsi/ergo/check"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"golang.org/x/mod/module"
 
 	"github.com/avamsi/climate/internal"
 )
@@ -34,6 +39,38 @@ func (cmd *command) addCommand(sub *command) {
 	cmd.delegate.AddCommand(&sub.delegate)
 }
 
+func version() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	if info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	var (
+		rev      string
+		t        time.Time
+		modified bool
+	)
+	for _, kv := range info.Settings {
+		switch kv.Key {
+		case "vcs.revision":
+			rev = kv.Value[:12]
+		case "vcs.time":
+			t = check.Ok(time.Parse(time.RFC3339Nano, kv.Value))
+		case "vcs.modified":
+			modified = check.Ok(strconv.ParseBool(kv.Value))
+		}
+	}
+	if t.IsZero() || rev == "" {
+		return ""
+	}
+	if modified {
+		rev += "*"
+	}
+	return module.PseudoVersion("", "", t, rev)
+}
+
 func (cmd *command) run(ctx context.Context) error {
 	normalize := func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
 		return pflag.NormalizedName(internal.NormalizeToKebabCase(name))
@@ -41,6 +78,7 @@ func (cmd *command) run(ctx context.Context) error {
 	// While we prefer kebab-case for flags, we do support other well-formed,
 	// cases through normalization (but only kebab-case shows up in --help).
 	cmd.delegate.SetGlobalNormalizationFunc(normalize)
+	cmd.delegate.Version = version()
 	return cmd.delegate.ExecuteContext(ctx)
 }
 
