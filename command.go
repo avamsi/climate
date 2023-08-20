@@ -2,6 +2,7 @@ package climate
 
 import (
 	"context"
+	"os/exec"
 	"reflect"
 
 	"github.com/spf13/cobra"
@@ -88,20 +89,23 @@ func (fcb *funcCommandBuilder) run(sig *runSignature) func(cmd *cobra.Command, a
 			if err == nil { // if _no_ error
 				return nil
 			}
-			switch err := err.(type) {
-			case *usageError:
+			if err, ok := err.(*usageError); ok {
 				// Let Cobra print both the error and usage information.
+				return err
+			}
+			// err is not a usage error (anymore), so set SilenceUsage to true
+			// to prevent Cobra from printing usage information.
+			cmd.SilenceUsage = true
+			switch err := err.(type) {
 			case *exitError:
 				// exitError may just be used to exit with a particular exit
 				// code and not necessarily have anything to print.
 				if len(err.errs) == 0 {
 					cmd.SilenceErrors = true
 				}
-				// Here and below, err is not a usage error, so set SilenceUsage
-				// to true to prevent Cobra from printing usage information.
-				cmd.SilenceUsage = true
-			default:
-				cmd.SilenceUsage = true
+			case *exec.ExitError:
+				// "Propagate" the exit code to climate.Run(...).
+				return ErrExit(err.ExitCode(), err)
 			}
 			return err.(error)
 		}
