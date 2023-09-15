@@ -2,6 +2,4 @@
 
 package tools
 
-import (
-	_ "github.com/avamsi/climate/cmd/climate"
-)
+import _ "github.com/avamsi/climate/cmd/climate"
