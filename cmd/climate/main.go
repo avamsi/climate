@@ -1,9 +1,12 @@
 package main
 
 import (
+	"errors"
 	"go/ast"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	_ "embed"
 
@@ -109,15 +112,32 @@ func parse(opts *parseOptions) {
 		}
 		parsePkg(pkg, &rootMd)
 	}
-	var (
-		flag = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
-		out  = check.Ok(os.OpenFile(opts.Out, flag, 0o644))
-	)
-	defer out.Close()
 	if opts.Debug {
 		litter.Dump(rootMd)
 	}
-	check.Ok(out.Write(rootMd.Encode()))
+	// gob encoding is not deterministic with maps, which means the encoded
+	// metadata (and hence the output file) will keep changing on each
+	// invocation even if nothing about the metadata actually changed, which is
+	// not ideal (causes VCS noise, for example). To avoid this, we compare the
+	// new metadata with the old one and write only if they are different.
+	var (
+		newEncoded      = rootMd.Encode()
+		oldEncoded, err = os.ReadFile(opts.Out)
+	)
+	if !errors.Is(err, fs.ErrNotExist) { // if exists
+		check.Nil(err)
+		var (
+			// This decoding step may seem redundant but note that rootMd is
+			// originally of the type internal.RawMetadata and this allows us to
+			// round trip it to internal.Metadata.
+			newDecoded = internal.DecodeMetadata(newEncoded)
+			oldDecoded = internal.DecodeMetadata(oldEncoded)
+		)
+		if reflect.DeepEqual(newDecoded, oldDecoded) {
+			return
+		}
+	}
+	check.Nil(os.WriteFile(opts.Out, newEncoded, 0o644))
 }
 
 //go:generate go run github.com/avamsi/climate/cmd/climate --out=md.climate
