@@ -22,6 +22,12 @@ type RawMetadata struct {
 	Children   map[string]*RawMetadata
 }
 
+func DecodeAsRawMetadata(b []byte) *RawMetadata {
+	var rmd RawMetadata
+	check.Nil(gob.NewDecoder(bytes.NewReader(b)).Decode(&rmd))
+	return &rmd
+}
+
 const directivePrefix = "//climate:"
 
 func (rmd *RawMetadata) SetDoc(doc *ast.CommentGroup) {
@@ -71,10 +77,8 @@ type Metadata struct {
 	children map[string]*Metadata
 }
 
-func DecodeMetadata(b []byte) *Metadata {
-	var raw RawMetadata
-	check.Nil(gob.NewDecoder(bytes.NewReader(b)).Decode(&raw))
-	md := &Metadata{raw: &raw}
+func DecodeAsMetadata(b []byte) *Metadata {
+	md := &Metadata{raw: DecodeAsRawMetadata(b)}
 	md.root = md
 	return md
 }

@@ -54,7 +54,7 @@ func Run(p plan, mods ...func(*runOptions)) int {
 	}
 	var md *internal.Metadata
 	if opts.metadata != nil {
-		md = internal.DecodeMetadata(*opts.metadata)
+		md = internal.DecodeAsMetadata(*opts.metadata)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

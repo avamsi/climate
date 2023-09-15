@@ -120,24 +120,15 @@ func parse(opts *parseOptions) {
 	// invocation even if nothing about the metadata actually changed, which is
 	// not ideal (causes VCS noise, for example). To avoid this, we compare the
 	// new metadata with the old one and write only if they are different.
-	var (
-		newEncoded      = rootMd.Encode()
-		oldEncoded, err = os.ReadFile(opts.Out)
-	)
+	oldEncoded, err := os.ReadFile(opts.Out)
 	if !errors.Is(err, fs.ErrNotExist) { // if exists
 		check.Nil(err)
-		var (
-			// This decoding step may seem redundant but note that rootMd is
-			// originally of the type internal.RawMetadata and this allows us to
-			// round trip it to internal.Metadata.
-			newDecoded = internal.DecodeMetadata(newEncoded)
-			oldDecoded = internal.DecodeMetadata(oldEncoded)
-		)
-		if reflect.DeepEqual(newDecoded, oldDecoded) {
+		oldDecoded := internal.DecodeAsRawMetadata(oldEncoded)
+		if reflect.DeepEqual(rootMd, *oldDecoded) {
 			return
 		}
 	}
-	check.Nil(os.WriteFile(opts.Out, newEncoded, 0o644))
+	check.Nil(os.WriteFile(opts.Out, rootMd.Encode(), 0o644))
 }
 
 //go:generate go run github.com/avamsi/climate/cmd/climate --out=md.climate
