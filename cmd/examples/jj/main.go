@@ -37,7 +37,7 @@ func (j *jj) Init(ctx context.Context, dir *string) {
 
 type squashOptions struct {
 	Revision    string `climate:"short" default:"@"`
-	Interactive bool   `short:"i"` // interactively choose which parts to squash
+	Interactive bool   `climate:"short"` // interactively choose which parts to squash
 }
 
 // Move changes from a revision into its parent.

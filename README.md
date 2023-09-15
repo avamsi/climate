@@ -18,11 +18,11 @@ Usage:
   greet [opts]
 
 Flags:
-  -g, --greeting string   greeting to use (default "Hello")
-  -n, --name     string   name to greet (default "World")
-  -t, --times    int      number of times to greet
-  -h, --help              help for greet
-  -v, --version           version for greet
+  -g, --greeting string (default Hello)  greeting to use
+  -n, --name     string (default World)  name to greet
+  -t, --times    int                     number of times to greet
+  -h, --help                             help for greet
+  -v, --version                          version for greet
 ```
 
 ### Subcommands
@@ -46,10 +46,10 @@ Available Commands:
   util        Infrequently used commands such as for generating shell completions
 
 Flags:
-  -R, --repository          path   path to the repo to operate on
-      --ignore-working-copy        don't snapshot / update the working copy
-  -h, --help                       help for jj
-  -v, --version                    version for jj
+  -R, --repository          path  path to the repo to operate on
+      --ignore-working-copy       don't snapshot / update the working copy
+  -h, --help                      help for jj
+  -v, --version                   version for jj
 
 Use "jj [command] --help" for more information about a command.
 ```
@@ -67,11 +67,11 @@ Available Commands:
   remote      Manage Git remotes
 
 Flags:
-  -h, --help   help for git
+  -h, --help  help for git
 
 Global Flags:
-      --ignore-working-copy        don't snapshot / update the working copy
-  -R, --repository          path   path to the repo to operate on
+      --ignore-working-copy       don't snapshot / update the working copy
+  -R, --repository          path  path to the repo to operate on
 
 Use "jj git [command] --help" for more information about a command.
 ```

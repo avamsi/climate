@@ -55,6 +55,8 @@ type option struct {
 	usage string
 }
 
+const nonZeroDefault = "climate_annotation_non_zero_default"
+
 func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParser[T]) {
 	var (
 		p     = (*T)(opt.p)
@@ -62,6 +64,9 @@ func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParse
 	)
 	if v, ok := opt.defaultValue(); ok {
 		value = typer(v)
+		defer func() {
+			check.Nil(opt.fset.SetAnnotation(opt.name, nonZeroDefault, nil))
+		}()
 	}
 	check.Truef(utf8string.NewString(opt.name).IsASCII(), "not ASCII: %q", opt.name)
 	var shorthand string

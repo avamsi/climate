@@ -5,5 +5,3 @@ use (
 	./cmd/climate
 	./cmd/examples
 )
-
-replace github.com/spf13/pflag => github.com/avamsi/pflag v0.0.0-20230909234104-ce97b5aaf2d0

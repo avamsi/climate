@@ -2,13 +2,16 @@ package climate
 
 import (
 	"context"
+	"fmt"
 	"os/exec"
 	"reflect"
 	"runtime/debug"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/avamsi/ergo/check"
+	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/mod/module"
@@ -71,6 +74,31 @@ func version() string {
 	return module.PseudoVersion("", "", t, rev)
 }
 
+func flagUsages(fset *pflag.FlagSet) string {
+	t := uitable.New()
+	t.Separator = ""
+	t.MaxColWidth = 80
+	t.Wrap = true
+	fset.VisitAll(func(f *pflag.Flag) {
+		var short string
+		if f.Shorthand != "" {
+			short = fmt.Sprintf("-%s, ", f.Shorthand)
+		}
+		var (
+			qtype, usage = pflag.UnquoteUsage(f)
+			value        string
+		)
+		if qtype != "" {
+			qtype += " "
+		}
+		if _, ok := f.Annotations[nonZeroDefault]; ok {
+			value = fmt.Sprintf("(default %v) ", f.DefValue)
+		}
+		t.AddRow("  ", short, "--", f.Name, " ", qtype, value, " ", usage)
+	})
+	return t.String()
+}
+
 func (cmd *command) run(ctx context.Context) error {
 	normalize := func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
 		return pflag.NormalizedName(internal.NormalizeToKebabCase(name))
@@ -79,6 +107,12 @@ func (cmd *command) run(ctx context.Context) error {
 	// cases through normalization (but only kebab-case shows up in --help).
 	cmd.delegate.SetGlobalNormalizationFunc(normalize)
 	cmd.delegate.Version = version()
+	// Align the flag usages as a table (pflag's FlagUsages already does this to
+	// some extent but doesn't align types and default values).
+	cobra.AddTemplateFunc("flagUsages", flagUsages)
+	t := cmd.delegate.UsageTemplate()
+	t = strings.ReplaceAll(t, ".FlagUsages", " | flagUsages")
+	cmd.delegate.SetUsageTemplate(t)
 	return cmd.delegate.ExecuteContext(ctx)
 }
 
@@ -96,7 +130,9 @@ type runSignature struct {
 	outErr bool
 }
 
-func (fcb *funcCommandBuilder) run(sig *runSignature) func(cmd *cobra.Command, args []string) error {
+type cobraRunE func(cmd *cobra.Command, args []string) error
+
+func (fcb *funcCommandBuilder) run(sig *runSignature) cobraRunE {
 	return func(cmd *cobra.Command, args []string) error {
 		var in []reflect.Value
 		if sig.inCtx {
