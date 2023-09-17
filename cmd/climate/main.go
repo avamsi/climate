@@ -10,18 +10,18 @@ import (
 
 	_ "embed"
 
-	"github.com/avamsi/climate"
-	"github.com/avamsi/climate/internal"
-
-	"github.com/avamsi/ergo/check"
+	"github.com/avamsi/ergo/assert"
 	"github.com/sanity-io/litter"
 	"golang.org/x/tools/go/packages"
+
+	"github.com/avamsi/climate"
+	"github.com/avamsi/climate/internal"
 )
 
 func parseFunc(f *ast.FuncDecl, pkgMd *internal.RawMetadata) {
 	parentMd := pkgMd
 	if f.Recv != nil {
-		check.Truef(len(f.Recv.List) == 1,
+		assert.Truef(len(f.Recv.List) == 1,
 			"not exactly one receiver: %s", litter.Sdump(f.Recv.List))
 		recv := f.Recv.List[0]
 		// We only support pointer receivers, skip others.
@@ -96,14 +96,18 @@ type parseOptions struct {
 	Debug bool   // whether to print metadata
 }
 
+// climate recursively parses the metadata of all Go packages in the current
+// directory and its subdirectories, and writes it to the given output file.
+//
+//climate:usage climate [opts]
 func parse(opts *parseOptions) {
 	var (
 		rootMd internal.RawMetadata
 		mode   = (packages.NeedName | packages.NeedFiles |
 			packages.NeedTypes | packages.NeedTypesInfo)
 		cfg     = &packages.Config{Mode: mode}
-		pkgs    = check.Ok(packages.Load(cfg, "./..."))
-		rootDir = check.Ok(filepath.Abs(check.Ok(os.Getwd())))
+		pkgs    = assert.Ok(packages.Load(cfg, "./..."))
+		rootDir = assert.Ok(filepath.Abs(assert.Ok(os.Getwd())))
 	)
 	for _, pkg := range pkgs {
 		if pkg.Name == "main" && pkgDir(pkg) != rootDir {
@@ -122,13 +126,13 @@ func parse(opts *parseOptions) {
 	// new metadata with the old one and write only if they are different.
 	oldEncoded, err := os.ReadFile(opts.Out)
 	if !errors.Is(err, fs.ErrNotExist) { // if exists
-		check.Nil(err)
+		assert.Nil(err)
 		oldDecoded := internal.DecodeAsRawMetadata(oldEncoded)
 		if reflect.DeepEqual(rootMd, *oldDecoded) {
 			return
 		}
 	}
-	check.Nil(os.WriteFile(opts.Out, rootMd.Encode(), 0o644))
+	assert.Nil(os.WriteFile(opts.Out, rootMd.Encode(), 0o644))
 }
 
 //go:generate go run github.com/avamsi/climate/cmd/climate --out=md.climate
