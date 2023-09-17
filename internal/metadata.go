@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/avamsi/ergo/check"
+	"github.com/avamsi/ergo/assert"
 	"github.com/sanity-io/litter"
 )
 
@@ -24,7 +24,7 @@ type RawMetadata struct {
 
 func DecodeAsRawMetadata(b []byte) *RawMetadata {
 	var rmd RawMetadata
-	check.Nil(gob.NewDecoder(bytes.NewReader(b)).Decode(&rmd))
+	assert.Nil(gob.NewDecoder(bytes.NewReader(b)).Decode(&rmd))
 	return &rmd
 }
 
@@ -67,7 +67,7 @@ func (rmd *RawMetadata) Child(name string) *RawMetadata {
 
 func (rmd *RawMetadata) Encode() []byte {
 	var b bytes.Buffer
-	check.Nil(gob.NewEncoder(&b).Encode(rmd))
+	assert.Nil(gob.NewEncoder(&b).Encode(rmd))
 	return b.Bytes()
 }
 

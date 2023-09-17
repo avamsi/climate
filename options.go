@@ -5,7 +5,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/avamsi/ergo/check"
+	"github.com/avamsi/ergo/assert"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/exp/utf8string"
@@ -65,10 +65,10 @@ func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParse
 	if v, ok := opt.defaultValue(); ok {
 		value = typer(v)
 		defer func() {
-			check.Nil(opt.fset.SetAnnotation(opt.name, nonZeroDefault, nil))
+			assert.Nil(opt.fset.SetAnnotation(opt.name, nonZeroDefault, nil))
 		}()
 	}
-	check.Truef(utf8string.NewString(opt.name).IsASCII(), "not ASCII: %q", opt.name)
+	assert.Truef(utf8string.NewString(opt.name).IsASCII(), "not ASCII: %q", opt.name)
 	var shorthand string
 	if v, ok := opt.shorthand(); ok {
 		if v == "" {
@@ -78,7 +78,7 @@ func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParse
 	}
 	flagVarP(p, opt.name, shorthand, value, opt.usage)
 	if opt.required() {
-		check.Nil(cobra.MarkFlagRequired(opt.fset, opt.name))
+		assert.Nil(cobra.MarkFlagRequired(opt.fset, opt.name))
 	}
 }
 

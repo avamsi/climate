@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/avamsi/ergo/check"
+	"github.com/avamsi/ergo/assert"
 	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -60,9 +60,9 @@ func version() string {
 		case "vcs.revision":
 			rev = kv.Value[:12]
 		case "vcs.time":
-			t = check.Ok(time.Parse(time.RFC3339Nano, kv.Value))
+			t = assert.Ok(time.Parse(time.RFC3339Nano, kv.Value))
 		case "vcs.modified":
-			modified = check.Ok(strconv.ParseBool(kv.Value))
+			modified = assert.Ok(strconv.ParseBool(kv.Value))
 		}
 	}
 	if t.IsZero() || rev == "" {
