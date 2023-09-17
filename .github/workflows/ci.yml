@@ -1,0 +1,28 @@
+name: ci
+on:
+  push:
+    branches:
+      - main
+permissions: read-all
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: stable
+      - run: go build -v ./...
+      - run: go test  -v ./...
+      - run: go build -v ./cmd/climate/...
+      - run: go build -v ./cmd/examples/...
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: stable
+      - uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
