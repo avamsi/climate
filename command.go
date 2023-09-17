@@ -79,6 +79,8 @@ func flagUsages(fset *pflag.FlagSet) string {
 	t.Separator = ""
 	t.MaxColWidth = 80
 	t.Wrap = true
+	// TODO: is this leaving extra spaces at the end of certain rows?
+	// See cmd/examples/{greet,jj}/main_test.go for some examples.
 	fset.VisitAll(func(f *pflag.Flag) {
 		var short string
 		if f.Shorthand != "" {
