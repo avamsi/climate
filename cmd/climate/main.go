@@ -140,5 +140,5 @@ func parse(opts *parseOptions) {
 var md []byte
 
 func main() {
-	os.Exit(climate.Run(climate.Func(parse), climate.Metadata(md)))
+	climate.RunAndExit(climate.Func(parse), climate.WithMetadata(md))
 }

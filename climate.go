@@ -3,6 +3,7 @@ package climate
 import (
 	"context"
 	"errors"
+	"os"
 	"reflect"
 
 	"github.com/avamsi/ergo/assert"
@@ -37,18 +38,29 @@ func Struct[T any](subcommands ...*structPlan) *structPlan {
 
 var _ plan = (*structPlan)(nil)
 
+func exitCode(err error) int {
+	if err == nil { // if _no_ error
+		return 0
+	}
+	var eerr *exitError
+	if errors.As(err, &eerr) {
+		return eerr.code
+	}
+	return 1
+}
+
 type runOptions struct {
 	metadata *[]byte
 }
 
-func Metadata(b []byte) func(*runOptions) {
+func WithMetadata(b []byte) func(*runOptions) {
 	return func(opts *runOptions) {
 		opts.metadata = &b
 	}
 }
 
-func Run(p plan, mods ...func(*runOptions)) int {
-	opts := runOptions{}
+func Run(ctx context.Context, p plan, mods ...func(*runOptions)) int {
+	var opts runOptions
 	for _, mod := range mods {
 		mod(&opts)
 	}
@@ -56,15 +68,12 @@ func Run(p plan, mods ...func(*runOptions)) int {
 	if opts.metadata != nil {
 		md = internal.DecodeAsMetadata(*opts.metadata)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	// Cobra already prints the error to stderr, so just return exit code here.
-	if err := p.execute(ctx, md); err != nil {
-		var eerr *exitError
-		if errors.As(err, &eerr) {
-			return eerr.code
-		}
-		return 1
-	}
-	return 0
+	return exitCode(p.execute(ctx, md))
+}
+
+func RunAndExit(p plan, mods ...func(*runOptions)) {
+	os.Exit(Run(context.Background(), p, mods...))
 }

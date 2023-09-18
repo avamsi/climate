@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 
 	_ "embed"
 
@@ -83,7 +82,6 @@ func main() {
 	//         export
 	//     util
 	//         completion
-	os.Exit(climate.Run(
-		climate.Struct[jj](climate.Struct[git](), climate.Struct[util.Util]()),
-		climate.Metadata(md)))
+	p := climate.Struct[jj](climate.Struct[git](), climate.Struct[util.Util]())
+	climate.RunAndExit(p, climate.WithMetadata(md))
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	_ "embed"
 
@@ -51,5 +50,5 @@ func greet(opts *greetOptions) {
 var md []byte
 
 func main() {
-	os.Exit(climate.Run(climate.Func(greet), climate.Metadata(md)))
+	climate.RunAndExit(climate.Func(greet), climate.WithMetadata(md))
 }
