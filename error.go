@@ -6,10 +6,9 @@ type usageError struct {
 	error
 }
 
-func (uerr *usageError) Unwrap() error {
-	return uerr.error
-}
-
+// ErrUsage returns the given error wrapped in a usageError or nil otherwise.
+// usageError is used to indicate there's something wrong with the user input
+// and that the usage information should be printed along with the error.
 func ErrUsage(err error) *usageError {
 	if err != nil {
 		return &usageError{err}
@@ -17,9 +16,20 @@ func ErrUsage(err error) *usageError {
 	return nil
 }
 
+func (uerr *usageError) Unwrap() error {
+	return uerr.error
+}
+
 type exitError struct {
 	code int
 	errs []error
+}
+
+// ErrExit returns an exitError with the given exit code and errors.
+// exitError is used to indicate that the program should exit with the given
+// exit code (as returned by Run / respected by RunAndExit).
+func ErrExit(code int, errs ...error) *exitError {
+	return &exitError{code, errs}
 }
 
 func (eerr *exitError) Error() string {
@@ -30,8 +40,4 @@ func (eerr *exitError) Error() string {
 
 func (eerr *exitError) Unwrap() []error {
 	return eerr.errs
-}
-
-func ErrExit(code int, errs ...error) *exitError {
-	return &exitError{code, errs}
 }

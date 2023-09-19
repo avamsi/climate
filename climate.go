@@ -2,8 +2,8 @@ package climate
 
 import (
 	"context"
-	"errors"
 	"os"
+	"os/exec"
 	"reflect"
 
 	"github.com/avamsi/ergo/assert"
@@ -42,11 +42,14 @@ func exitCode(err error) int {
 	if err == nil { // if _no_ error
 		return 0
 	}
-	var eerr *exitError
-	if errors.As(err, &eerr) {
-		return eerr.code
+	switch err := err.(type) {
+	case *exitError:
+		return err.code
+	case *exec.ExitError:
+		return err.ExitCode()
+	default:
+		return 1
 	}
-	return 1
 }
 
 type runOptions struct {
