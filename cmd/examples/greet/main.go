@@ -13,19 +13,19 @@ import (
 //	   That said, users can pass flags in camelCase, PascalCase, snake_case or
 //	   SCREAMING_SNAKE_CASE and everything just works (thanks to normalization).
 //	2. Field types are used as flag types (string, bool, int, etc.).
-//	3. "short" subfield tags (under the "climate" tags) are used as short flag
-//	   names (as is). It's also possible to omit the value, in which case the
-//	   first letter of the field name is used.
+//	3. "short" subfield tags (under the "cli" tags) are used as short flag names
+//	   (as is). It's also possible to omit the value, in which case the first
+//	   letter of the field name is used.
 //	4. "default" field tags are used as default values (of course, with
 //	   automatic type conversion from raw string to the actual field type).
 //	5. Field docs / comments are used* as flag usage strings (as is).
-//	6. "required" subfield tags (under the "climate" tags) are used to mark the
+//	6. "required" subfield tags (under the "cli" tags) are used to mark the
 //	   flags as required (i.e., the command is errored out without these flags).
 
 type greetOptions struct {
-	Greeting string `climate:"short" default:"Hello"`   // greeting to use
-	Name     string `climate:"short=n" default:"World"` // name to greet
-	Times    int    `climate:"short,required"`          // number of times to greet
+	Greeting string `cli:"short" default:"Hello"`   // greeting to use
+	Name     string `cli:"short=n" default:"World"` // name to greet
+	Times    int    `cli:"short,required"`          // number of times to greet
 }
 
 // Func is automatically converted to a command --
@@ -45,8 +45,8 @@ func greet(opts *greetOptions) {
 
 // * These only work if you generate and pass along "metadata" like below --
 
-//go:generate go run github.com/avamsi/climate/cmd/climate --out=md.climate
-//go:embed md.climate
+//go:generate go run github.com/avamsi/climate/cmd/climate --out=md.cli
+//go:embed md.cli
 var md []byte
 
 func main() {

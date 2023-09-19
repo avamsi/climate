@@ -28,7 +28,7 @@ func DecodeAsRawMetadata(b []byte) *RawMetadata {
 	return &rmd
 }
 
-const directivePrefix = "//climate:"
+const directivePrefix = "//cli:"
 
 func (rmd *RawMetadata) SetDoc(doc *ast.CommentGroup) {
 	if doc == nil {

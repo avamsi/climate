@@ -20,12 +20,12 @@ import (
 //	   1. Method names are converted to lowercase and used as the command name.
 //	   2. Method docs are truncated and are used* as short help strings.
 //	   3. Method directives are used* to declare aliases or explicitly set the
-//	      short help strings (//climate:aliases, for example).
+//	      short help strings (//cli:aliases, for example).
 //	4. "Sub-structs" are automatically converted to subcommands, recursively.
 
 // Jujutsu (an experimental VCS).
 type jj struct {
-	Repository        string `climate:"short=R"` // `path` to the repo to operate on
+	Repository        string `cli:"short=R"` // `path` to the repo to operate on
 	IgnoreWorkingCopy bool   // don't snapshot / update the working copy
 }
 
@@ -35,8 +35,8 @@ func (j *jj) Init(ctx context.Context, dir *string) {
 }
 
 type squashOptions struct {
-	Revision    string `climate:"short" default:"@"`
-	Interactive bool   `climate:"short"` // interactively choose which parts to squash
+	Revision    string `cli:"short" default:"@"`
+	Interactive bool   `cli:"short"` // interactively choose which parts to squash
 }
 
 // Move changes from a revision into its parent.
@@ -46,7 +46,7 @@ type squashOptions struct {
 // compared to its parent, it will be abandoned. Without `--interactive`, the
 // child change will always be empty.
 //
-//climate:aliases am, amend
+//cli:aliases am, amend
 func (j *jj) Squash(opts *squashOptions, paths [5]string) {
 	fmt.Println("squash", j, opts, paths)
 }
@@ -66,8 +66,8 @@ func (g *git) Export() {
 	fmt.Println("export", g.J)
 }
 
-//go:generate go run github.com/avamsi/climate/cmd/climate --out=md.climate
-//go:embed md.climate
+//go:generate go run github.com/avamsi/climate/cmd/climate --out=md.cli
+//go:embed md.cli
 var md []byte
 
 func main() {

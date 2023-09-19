@@ -24,7 +24,7 @@ func newTags(st reflect.StructTag) tags {
 	if v, ok := st.Lookup("default"); ok {
 		m["default"] = v
 	}
-	for _, kv := range strings.Split(st.Get("climate"), ",") {
+	for _, kv := range strings.Split(st.Get("cli"), ",") {
 		k, v, _ := strings.Cut(kv, "=")
 		m[k] = v
 	}

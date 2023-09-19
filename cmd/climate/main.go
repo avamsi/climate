@@ -99,7 +99,7 @@ type parseOptions struct {
 // climate recursively parses the metadata of all Go packages in the current
 // directory and its subdirectories, and writes it to the given output file.
 //
-//climate:usage climate [opts]
+//cli:usage climate [opts]
 func parse(opts *parseOptions) {
 	var (
 		rootMd internal.RawMetadata
@@ -135,8 +135,8 @@ func parse(opts *parseOptions) {
 	assert.Nil(os.WriteFile(opts.Out, rootMd.Encode(), 0o644))
 }
 
-//go:generate go run github.com/avamsi/climate/cmd/climate --out=md.climate
-//go:embed md.climate
+//go:generate go run github.com/avamsi/climate/cmd/climate --out=md.cli
+//go:embed md.cli
 var md []byte
 
 func main() {
