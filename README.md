@@ -7,7 +7,7 @@ with "batteries included" (help, shell completion etc.).
 
 ## Usage
 
-https://github.com/avamsi/climate/blob/541bffe22424d1d83d1044ca4f1f0629f4588b76/cmd/examples/greet/main.go#L1-L55
+https://github.com/avamsi/climate/blob/0f0a8617373f1f55f08797fe8c8807902f5582bd/cmd/examples/greet/main.go#L11-L54
 
 ```
 $ greet --help
@@ -27,7 +27,7 @@ Flags:
 
 ### Subcommands
 
-https://github.com/avamsi/climate/blob/541bffe22424d1d83d1044ca4f1f0629f4588b76/cmd/examples/jj/main.go#L1-L89
+https://github.com/avamsi/climate/blob/0f0a8617373f1f55f08797fe8c8807902f5582bd/cmd/examples/jj/main.go#L14-L87
 
 ```
 $ jj --help
