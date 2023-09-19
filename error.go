@@ -26,8 +26,8 @@ type exitError struct {
 }
 
 // ErrExit returns an exitError with the given exit code and errors.
-// exitError is used to indicate that the program should exit with the given
-// exit code (as returned by Run / respected by RunAndExit).
+// exitError is used to indicate that the CLI should exit with the given exit
+// code (as returned by Run and respected by RunAndExit).
 func ErrExit(code int, errs ...error) *exitError {
 	return &exitError{code, errs}
 }
