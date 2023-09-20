@@ -16,6 +16,20 @@ jobs:
         run: |
           go build -v ./...
           go test  -v ./...
+  generate:
+    strategy:
+      matrix:
+        working-directory: [cmd/climate, cmd/examples]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: stable
+      - working-directory: ${{ matrix.working-directory }}
+        run: |
+          go generate -v ./...
+          [[ -z "$(git status --porcelain)" ]]
   lint:
     runs-on: ubuntu-latest
     steps:

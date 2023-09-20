@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"go/ast"
 	"io/fs"
 	"os"
@@ -133,6 +134,7 @@ func parse(opts *parseOptions) {
 		}
 	}
 	assert.Nil(os.WriteFile(opts.Out, rootMd.Encode(), 0o644))
+	fmt.Println("climate: (re)generated", opts.Out)
 }
 
 //go:generate go run github.com/avamsi/climate/cmd/climate --out=md.cli
