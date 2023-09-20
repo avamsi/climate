@@ -47,6 +47,14 @@ func Struct[T any](subcommands ...*structPlan) *structPlan {
 		t   = ptr.Elem()
 	)
 	assert.Truef(t.Kind() == reflect.Struct, "not a struct: %v", t)
+	if n := t.NumMethod(); n > 0 {
+		ms := make([]string, n)
+		for i := 0; i < n; i++ {
+			ms[i] = t.Method(i).Name
+		}
+		internal.Panicf("nonzero methods %v on: %v", ms, t)
+	}
+	assert.Truef(ptr.NumMethod() > 0, "no methods on: %v", ptr)
 	return &structPlan{
 		reflection{ptr: &reflection{ot: ptr}, ot: t},
 		subcommands,

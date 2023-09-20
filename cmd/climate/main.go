@@ -133,6 +133,8 @@ func parse(opts *parseOptions) {
 			return
 		}
 	}
+	// #nosec G306 -- G306 expects 0o600 or less but 0o644 is fine here as the
+	// metadata is not really sensitive (and is expected to be committed).
 	assert.Nil(os.WriteFile(opts.Out, rootMd.Encode(), 0o644))
 	fmt.Println("climate: (re)generated", opts.Out)
 }

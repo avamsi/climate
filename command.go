@@ -267,12 +267,8 @@ func (scb *structCommandBuilder) build() *command {
 	)
 	opts.declare()
 	for i := 0; i < scb.ptr.v().NumMethod(); i++ {
-		m := scb.ptr.t().Method(i)
-		// We only support pointer receivers, skip value receiver methods.
-		if _, ok := scb.t().MethodByName(m.Name); ok {
-			continue
-		}
 		var (
+			m   = scb.ptr.t().Method(i)
 			v   = scb.ptr.v().Method(i)
 			fcb = &funcCommandBuilder{
 				m.Name,
