@@ -5,32 +5,35 @@ jobs:
   build-and-test:
     strategy:
       matrix:
-        working-directory: [., cmd/climate, cmd/examples]
+        module: [., cmd/climate, cmd/examples]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
           go-version: stable
-      - working-directory: ${{ matrix.working-directory }}
+      - working-directory: ${{ matrix.module }}
         run: |
           go build -v ./...
           go test  -v ./...
   generate:
     strategy:
       matrix:
-        working-directory: [cmd/climate, cmd/examples]
+        module: [cmd/climate, cmd/examples]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
           go-version: stable
-      - working-directory: ${{ matrix.working-directory }}
+      - working-directory: ${{ matrix.module }}
         run: |
           go generate -v ./...
           [[ -z "$(git status --porcelain)" ]]
   lint:
+    strategy:
+      matrix:
+        module: [., cmd/climate, cmd/examples]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,3 +43,4 @@ jobs:
       - uses: golangci/golangci-lint-action@v3
         with:
           version: latest
+          working-directory: ${{ matrix.module }}
