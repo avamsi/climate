@@ -1,46 +1,8 @@
-name: ci
 on: [push, pull_request]
 permissions: read-all
+
 jobs:
-  build-and-test:
-    strategy:
-      matrix:
-        module: [., cmd/climate, cmd/examples]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-        with:
-          go-version: stable
-      - working-directory: ${{ matrix.module }}
-        run: |
-          go build -v ./...
-          go test  -v ./...
-  generate:
-    strategy:
-      matrix:
-        module: [cmd/climate, cmd/examples]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-        with:
-          go-version: stable
-      - working-directory: ${{ matrix.module }}
-        run: |
-          go generate -v ./...
-          [[ -z "$(git status --porcelain)" ]]
-  lint:
-    strategy:
-      matrix:
-        module: [., cmd/climate, cmd/examples]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-        with:
-          go-version: stable
-      - uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          working-directory: ${{ matrix.module }}
+  ci:
+    uses: avamsi/go-nogo/.github/workflows/ci.yml@main
+    with:
+      runs-on: ubuntu-latest
