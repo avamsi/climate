@@ -3,18 +3,19 @@ on: [push, pull_request]
 permissions: read-all
 jobs:
   build-and-test:
+    strategy:
+      matrix:
+        working-directory: [., cmd/climate, cmd/examples]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
           go-version: stable
-      - run: |
+      - working-directory: ${{ matrix.working-directory }}
+        run: |
           go build -v ./...
           go test  -v ./...
-          go build -v ./cmd/climate/...
-          go build -v ./cmd/examples/...
-          go test  -v ./cmd/examples/...
   lint:
     runs-on: ubuntu-latest
     steps:
