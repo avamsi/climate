@@ -107,6 +107,13 @@ func (cmd *command) run(ctx context.Context) error {
 	// While we prefer kebab-case for flags, we do support other well-formed,
 	// cases through normalization (but only kebab-case shows up in --help).
 	cmd.delegate.SetGlobalNormalizationFunc(normalize)
+	cmd.delegate.AddCommand(&cobra.Command{
+		Use: "version",
+		Run: func(*cobra.Command, []string) {
+			fmt.Println(version())
+		},
+		Hidden: true,
+	})
 	cmd.delegate.Version = version()
 	// Align the flag usages as a table (pflag's FlagUsages already does this to
 	// some extent but doesn't align types and default values).
@@ -131,9 +138,7 @@ type runSignature struct {
 	outErr bool
 }
 
-type cobraRunE func(cmd *cobra.Command, args []string) error
-
-func (fcb *funcCommandBuilder) run(sig *runSignature) cobraRunE {
+func (fcb *funcCommandBuilder) run(sig *runSignature) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		var in []reflect.Value
 		if sig.inCtx {
