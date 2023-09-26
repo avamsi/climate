@@ -141,14 +141,11 @@ func (md *Metadata) Short() string {
 	}
 	rs := []rune(long)
 	rs[0] = unicode.ToUpper(rs[0])
-	if len(rs) > 80 {
+	if l := len(rs); l > 80 {
 		rs = append(rs[:77], []rune("...")...)
-	} else if len(rs) > 1 && rs[len(rs)-1] == '.' {
-		// Clip the period at the end by convention but only if the last but one
-		// character is a letter or a digit. TODO: other cases?
-		if r := rs[len(rs)-2]; unicode.IsLetter(r) || unicode.IsDigit(r) {
-			rs = rs[:len(rs)-1]
-		}
+	} else if rs[l-1] == '.' && !strings.HasSuffix(long, "..") {
+		// Clip the period at the end, by (Cobra's) convention.
+		rs = rs[:l-1]
 	}
 	return string(rs)
 }
