@@ -68,7 +68,7 @@ func declareOption[T any](flagVarP flagTypeVarP[T], opt *option, typer typeParse
 			assert.Nil(opt.fset.SetAnnotation(opt.name, nonZeroDefault, nil))
 		}()
 	}
-	assert.Truef(utf8string.NewString(opt.name).IsASCII(), "not ASCII: %q", opt.name)
+	assert.Truef(utf8string.NewString(opt.name).IsASCII(), "not ASCII: %v", opt.name)
 	var shorthand string
 	if v, ok := opt.shorthand(); ok {
 		if v == "" {
@@ -141,13 +141,13 @@ func (opt *option) declare() bool {
 				sliceParser(parseString),
 			)
 		default:
-			internal.Panicf("not []bool | []Signed | []Float | []string: %q", e)
+			internal.Panicf("not []bool | []Signed | []Float | []string: %v", e)
 		}
 	default:
 		if typeIsStructPointer(opt.t) {
 			return false
 		}
-		internal.Panicf("not bool | Integer | Float | string | []T: %q", opt.t)
+		internal.Panicf("not bool | Integer | Float | string | []T: %v", opt.t)
 	}
 	return true
 }
@@ -185,15 +185,15 @@ func (opts *options) declare() {
 		)
 		if !opt.declare() {
 			if opts.parent == nil {
-				internal.Panicf("not bool | Integer | Float | string | []T: %q", f.Type)
+				internal.Panicf("not bool | Integer | Float | string | []T: %v", f.Type)
 			}
 			if f.Type != opts.parent.ptr.t() {
 				internal.Panicf(
-					"not bool | Integer | Float | string | []T | %q: %q",
+					"not bool | Integer | Float | string | []T | %v: %v",
 					opts.parent.t(), f.Type)
 			}
 			if parentSet {
-				internal.Panicf("more than one parent: %q", f.Type)
+				internal.Panicf("more than one parent: %v", f.Type)
 			}
 			v.Set(*opts.parent.ptr.v())
 		}

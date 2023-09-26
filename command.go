@@ -83,7 +83,7 @@ func flagUsages(fset *pflag.FlagSet) string {
 	fset.VisitAll(func(f *pflag.Flag) {
 		var short string
 		if f.Shorthand != "" {
-			short = fmt.Sprintf("-%s, ", f.Shorthand)
+			short = fmt.Sprintf("-%v, ", f.Shorthand)
 		}
 		var (
 			qtype, usage = pflag.UnquoteUsage(f)
@@ -243,7 +243,7 @@ func (fcb *funcCommandBuilder) build() *command {
 	}
 	outErr := fcb.t().NumOut() == 1 && typeIsError(fcb.t().Out(0))
 	if i != n || fcb.t().IsVariadic() || (fcb.t().NumOut() != 0 && !outErr) {
-		internal.Panicf("not func([context.Context], [*struct], [[]string]) [error]: %q", fcb.t())
+		internal.Panicf("not func([context.Context], [*struct], [[]string]) [error]: %v", fcb.t())
 	}
 	cmd.delegate.RunE = fcb.run(&runSignature{n, inCtx, inOpts, inArgs, outErr})
 	return cmd

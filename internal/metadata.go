@@ -43,7 +43,7 @@ func (rmd *RawMetadata) SetDoc(doc *ast.CommentGroup) {
 		d, value, _ := strings.Cut(comment.Text, " ")
 		d = strings.TrimPrefix(d, directivePrefix)
 		if _, ok := rmd.Directives[d]; ok {
-			Panicf("more than one %q directive: %s", d, litter.Sdump(doc))
+			Panicf("more than one %v directive: %v", d, litter.Sdump(doc))
 		}
 		rmd.Directives[d] = strings.TrimSpace(value)
 	}

@@ -64,14 +64,15 @@ Use "jj git [command] --help" for more information about a command.
 		t.Run(tc.name, func(t *testing.T) {
 			cmd := exec.Command("go", "run", ".")
 			cmd.Args = append(cmd.Args, tc.args...)
-			got, err := cmd.CombinedOutput()
+			out, err := cmd.CombinedOutput()
 			if err != nil {
 				t.Errorf("error: %v\n", err)
 			}
-			if diff := cmp.Diff(tc.want, string(got)); diff != "" {
-				t.Errorf("want:\n%s", tc.want)
-				t.Errorf("got:\n%s", got)
-				t.Errorf("diff(-want +got):%s", diff)
+			got := string(out)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("want:\n%v", tc.want)
+				t.Errorf("got:\n%v", got)
+				t.Errorf("diff(-want +got):%v", diff)
 			}
 		})
 	}

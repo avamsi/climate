@@ -29,7 +29,7 @@ type plan interface {
 // a struct (whose fields are used as flags).
 func Func(f any) *funcPlan {
 	t := reflect.TypeOf(f)
-	assert.Truef(t.Kind() == reflect.Func, "not a func: %q", t)
+	assert.Truef(t.Kind() == reflect.Func, "not a func: %v", t)
 	v := reflect.ValueOf(f)
 	return &funcPlan{reflection{ot: t, ov: &v}}
 }
@@ -46,7 +46,7 @@ func Struct[T any](subcommands ...*structPlan) *structPlan {
 		ptr = reflect.TypeOf((*T)(nil))
 		t   = ptr.Elem()
 	)
-	assert.Truef(t.Kind() == reflect.Struct, "not a struct: %q", t)
+	assert.Truef(t.Kind() == reflect.Struct, "not a struct: %v", t)
 	return &structPlan{
 		reflection{ptr: &reflection{ot: ptr}, ot: t},
 		subcommands,

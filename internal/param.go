@@ -42,13 +42,13 @@ func ParamsUsage(names []string, types []ParamType) string {
 		name = NormalizeToKebabCase(name)
 		switch types[i] {
 		case RequiredParam:
-			usage.WriteString(fmt.Sprintf(" <%s>", name))
+			usage.WriteString(fmt.Sprintf(" <%v>", name))
 		case OptionalParam:
-			usage.WriteString(fmt.Sprintf(" [%s]", name))
+			usage.WriteString(fmt.Sprintf(" [%v]", name))
 		case FixedLengthParam:
-			usage.WriteString(fmt.Sprintf(" <%s...>", name))
+			usage.WriteString(fmt.Sprintf(" <%v...>", name))
 		case ArbitraryLengthParam:
-			usage.WriteString(fmt.Sprintf(" [%s...]", name))
+			usage.WriteString(fmt.Sprintf(" [%v...]", name))
 		}
 	}
 	return usage.String()

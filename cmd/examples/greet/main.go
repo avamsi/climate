@@ -39,7 +39,7 @@ type greetOptions struct {
 // Greet someone.
 func greet(opts *greetOptions) {
 	for i := 0; i < opts.Times; i++ {
-		fmt.Printf("%s, %s!\n", opts.Greeting, opts.Name)
+		fmt.Printf("%v, %v!\n", opts.Greeting, opts.Name)
 	}
 }
 

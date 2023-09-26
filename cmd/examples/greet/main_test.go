@@ -21,14 +21,15 @@ Flags:
   -t, --times    int                     number of times to greet
   -h, --help                             help for greet
 `
-		got, err = help.CombinedOutput()
+		out, err = help.CombinedOutput()
 	)
 	if err != nil {
 		t.Errorf("error: %v\n", err)
 	}
-	if diff := cmp.Diff(want, string(got)); diff != "" {
-		t.Errorf("want:\n%s", want)
-		t.Errorf("got:\n%s", got)
-		t.Errorf("diff(-want +got):%s", diff)
+	got := string(out)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("want:\n%v", want)
+		t.Errorf("got:\n%v", got)
+		t.Errorf("diff(-want +got):%v", diff)
 	}
 }
