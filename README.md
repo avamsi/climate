@@ -44,6 +44,7 @@ Available Commands:
   init        Create a new repo in the given directory
   squash      Move changes from a revision into its parent
   util        Infrequently used commands such as for generating shell completions
+  version     Version information of jj
 
 Flags:
   -R, --repository          path  path to the repo to operate on
