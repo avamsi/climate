@@ -111,9 +111,11 @@ func (cmd *command) run(ctx context.Context) error {
 		// Add the version subcommand only when the root command already has
 		// subcommands (similar to how Cobra does it for help / completion).
 		if cmd.delegate.HasSubCommands() {
+			help := fmt.Sprintf("Display %s's version information", cmd.delegate.Name())
 			cmd.delegate.AddCommand(&cobra.Command{
 				Use:   "version",
-				Short: "Version information of " + cmd.delegate.Name(),
+				Short: help,
+				Long:  help + ".",
 				Run: func(*cobra.Command, []string) {
 					fmt.Println(version())
 				},
