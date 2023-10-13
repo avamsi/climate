@@ -64,11 +64,14 @@ func parseType(g *ast.GenDecl, pkgMd *internal.RawMetadata) {
 }
 
 func parsePkg(pkg *packages.Package, rootMd *internal.RawMetadata) {
-	pkgPath := pkg.PkgPath
+	pkgMd := rootMd.Child(pkg.PkgPath)
 	if pkg.Name == "main" {
-		pkgPath = "main"
+		// main packages are special, in that they're standalone in production
+		// (reflect will report the package path as "main", for example) but
+		// they're importable in tests "normally".
+		// TODO: stop duplicating the package metadata here.
+		rootMd.Children["main"] = pkgMd
 	}
-	pkgMd := rootMd.Child(pkgPath)
 	for node := range pkg.TypesInfo.Scopes {
 		file, ok := node.(*ast.File)
 		if !ok {
@@ -106,14 +109,20 @@ func parse(opts *parseOptions) {
 		rootMd internal.RawMetadata
 		mode   = (packages.NeedName | packages.NeedFiles |
 			packages.NeedTypes | packages.NeedTypesInfo)
-		cfg     = &packages.Config{Mode: mode}
-		pkgs    = assert.Ok(packages.Load(cfg, "./..."))
-		rootDir = assert.Ok(filepath.Abs(assert.Ok(os.Getwd())))
+		cfg      = &packages.Config{Mode: mode}
+		pkgs     = assert.Ok(packages.Load(cfg, "./..."))
+		rootDir  = assert.Ok(filepath.Abs(assert.Ok(os.Getwd())))
+		mainPkgs []string
 	)
 	for _, pkg := range pkgs {
-		if pkg.Name == "main" && pkgDir(pkg) != rootDir {
-			// Skip non-root main packages.
-			continue
+		if pkg.Name == "main" {
+			if pkgDir(pkg) != rootDir {
+				// Skip non-root main packages.
+				continue
+			}
+			mainPkgs = append(mainPkgs, pkg.PkgPath)
+			assert.Truef(len(mainPkgs) <= 1,
+				"more than one main packages: %v", mainPkgs)
 		}
 		parsePkg(pkg, &rootMd)
 	}

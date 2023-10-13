@@ -1,22 +1,13 @@
-module github.com/avamsi/climate/cmd/examples
+module github.com/avamsi/climate/testing
 
 go 1.20
 
 require (
-	github.com/avamsi/climate v0.0.0
-	github.com/avamsi/climate/cmd/cligen v0.0.0
-	github.com/avamsi/climate/testing v0.0.0
-	github.com/google/go-cmp v0.5.9
-)
-
-replace (
-	github.com/avamsi/climate v0.0.0 => ../..
-	github.com/avamsi/climate/cmd/cligen v0.0.0 => ../cligen
-	github.com/avamsi/climate/testing v0.0.0 => ../../testing
+	github.com/avamsi/climate v0.0.0-20231013095157-1a63f483d4ef
+	github.com/avamsi/ergo v0.0.0-20231013073317-327353949369
 )
 
 require (
-	github.com/avamsi/ergo v0.0.0-20231013073317-327353949369 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -31,5 +22,4 @@ require (
 	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/tools v0.14.0 // indirect
 )

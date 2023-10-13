@@ -16,10 +16,6 @@ import (
 	"github.com/avamsi/climate/internal"
 )
 
-type plan interface {
-	execute(context.Context, *internal.Metadata) error
-}
-
 // Func returns an executable plan for the given function, which must conform to
 // the following signatures (excuse the partial [optional] notation):
 //
@@ -34,7 +30,7 @@ func Func(f any) *funcPlan {
 	return &funcPlan{reflection{ot: t, ov: &v}}
 }
 
-var _ plan = (*funcPlan)(nil)
+var _ internal.Plan = (*funcPlan)(nil)
 
 // Struct returns an executable plan for the struct given as the type parameter,
 // with its methods* (and "child" structs) as subcommands.
@@ -61,7 +57,7 @@ func Struct[T any](subcommands ...*structPlan) *structPlan {
 	}
 }
 
-var _ plan = (*structPlan)(nil)
+var _ internal.Plan = (*structPlan)(nil)
 
 func exitCode(err error) int {
 	if err == nil { // if _no_ error
@@ -77,35 +73,31 @@ func exitCode(err error) int {
 	}
 }
 
-type runOptions struct {
-	metadata *[]byte
-}
-
 // WithMetadata returns a modifier that sets the metadata to be used by Run for
 // augmenting the CLI with additional information (for --help etc.).
-func WithMetadata(b []byte) func(*runOptions) {
-	return func(opts *runOptions) {
-		opts.metadata = &b
+func WithMetadata(b []byte) func(*internal.RunOptions) {
+	return func(opts *internal.RunOptions) {
+		opts.Metadata = &b
 	}
 }
 
 // Run executes the given plan and returns the exit code.
-func Run(ctx context.Context, p plan, mods ...func(*runOptions)) int {
-	var opts runOptions
+func Run(ctx context.Context, p internal.Plan, mods ...func(*internal.RunOptions)) int {
+	var opts internal.RunOptions
 	for _, mod := range mods {
 		mod(&opts)
 	}
 	var md *internal.Metadata
-	if opts.metadata != nil {
-		md = internal.DecodeAsMetadata(*opts.metadata)
+	if opts.Metadata != nil {
+		md = internal.DecodeAsMetadata(*opts.Metadata)
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	// Cobra already prints the error to stderr, so just return exit code here.
-	return exitCode(p.execute(ctx, md))
+	return exitCode(p.Execute(ctx, md))
 }
 
 // RunAndExit executes the given plan and exits with the exit code.
-func RunAndExit(p plan, mods ...func(*runOptions)) {
+func RunAndExit(p internal.Plan, mods ...func(*internal.RunOptions)) {
 	os.Exit(Run(context.Background(), p, mods...))
 }

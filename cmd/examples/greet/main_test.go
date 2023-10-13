@@ -1,16 +1,17 @@
 package main
 
 import (
-	"os/exec"
 	"testing"
 
+	"github.com/avamsi/climate"
+	"github.com/avamsi/climate/testing/clitest"
 	"github.com/google/go-cmp/cmp"
 )
 
 func TestMain(t *testing.T) {
 	var (
-		help = exec.Command("go", "run", ".", "--help")
-		want = `Greet someone.
+		greet = clitest.New(climate.Func(greet), climate.WithMetadata(md))
+		want  = `Greet someone.
 
 Usage:
   greet [opts]
@@ -21,12 +22,8 @@ Flags:
   -t, --times    int                     number of times to greet
   -h, --help                             help for greet
 `
-		out, err = help.CombinedOutput()
+		got = greet([]string{"--help"}).Stdout
 	)
-	if err != nil {
-		t.Errorf("error: %v\n", err)
-	}
-	got := string(out)
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("want:\n%v", want)
 		t.Errorf("got:\n%v", got)

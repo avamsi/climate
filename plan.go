@@ -12,7 +12,7 @@ type funcPlan struct {
 	reflection
 }
 
-func (fp *funcPlan) execute(ctx context.Context, md *internal.Metadata) error {
+func (fp *funcPlan) Execute(ctx context.Context, md *internal.Metadata) error {
 	var (
 		name = runtime.FuncForPC(fp.v().Pointer()).Name()
 		dot  = strings.LastIndex(name, ".")
@@ -45,7 +45,7 @@ func (sp *structPlan) buildRecursive(parent *reflection, md *internal.Metadata) 
 	return cmd
 }
 
-func (sp *structPlan) execute(ctx context.Context, m *internal.Metadata) error {
+func (sp *structPlan) Execute(ctx context.Context, m *internal.Metadata) error {
 	root := sp.buildRecursive(nil, m) // no parent
 	return root.run(ctx)
 }

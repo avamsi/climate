@@ -2,6 +2,6 @@ package internal
 
 import "fmt"
 
-func Panicf(format string, args ...any) {
-	panic(fmt.Sprintf(format, args...))
+func Panicf(format string, a ...any) {
+	panic(fmt.Sprintf(format, a...))
 }

@@ -1,9 +1,11 @@
 package main
 
 import (
-	"os/exec"
 	"testing"
 
+	"github.com/avamsi/climate"
+	"github.com/avamsi/climate/cmd/examples/jj/util"
+	"github.com/avamsi/climate/testing/clitest"
 	"github.com/google/go-cmp/cmp"
 )
 
@@ -60,17 +62,15 @@ Use "jj git [command] --help" for more information about a command.
 `,
 		},
 	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			cmd := exec.Command("go", "run", ".")
-			cmd.Args = append(cmd.Args, tc.args...)
-			out, err := cmd.CombinedOutput()
-			if err != nil {
-				t.Errorf("error: %v\n", err)
-			}
-			got := string(out)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("want:\n%v", tc.want)
+	var (
+		p  = climate.Struct[jj](climate.Struct[git](), climate.Struct[util.Util]())
+		jj = clitest.New(p, climate.WithMetadata(md))
+	)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := jj(test.args).Stdout
+			if diff := cmp.Diff(test.want, got); diff != "" {
+				t.Errorf("want:\n%v", test.want)
 				t.Errorf("got:\n%v", got)
 				t.Errorf("diff(-want +got):%v", diff)
 			}

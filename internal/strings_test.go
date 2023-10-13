@@ -63,9 +63,9 @@ func TestNormalizeToKebabCase(t *testing.T) {
 			want: "qui-ck-brown-fox-jumps-over-the",
 		},
 	}
-	for _, tc := range tests {
-		if got := internal.NormalizeToKebabCase(tc.in); got != tc.want {
-			t.Errorf("normalizeToKebabCase(%v) = %v, want %v", tc.in, got, tc.want)
+	for _, test := range tests {
+		if got := internal.NormalizeToKebabCase(test.in); got != test.want {
+			t.Errorf("normalizeToKebabCase(%v) = %v, want %v", test.in, got, test.want)
 		}
 	}
 }
