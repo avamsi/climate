@@ -66,7 +66,7 @@ func (g *git) Export() {
 	fmt.Println("export", g.J)
 }
 
-//go:generate go run github.com/avamsi/climate/cmd/climate --out=md.cli
+//go:generate go run github.com/avamsi/climate/cmd/cligen --out=md.cli
 //go:embed md.cli
 var md []byte
 

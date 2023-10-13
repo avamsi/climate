@@ -97,10 +97,10 @@ type parseOptions struct {
 	Debug bool   // whether to print metadata
 }
 
-// climate recursively parses the metadata of all Go packages in the current
+// cligen recursively parses the metadata of all Go packages in the current
 // directory and its subdirectories, and writes it to the given output file.
 //
-//cli:usage climate [opts]
+//cli:usage cligen [opts]
 func parse(opts *parseOptions) {
 	var (
 		rootMd internal.RawMetadata
@@ -136,10 +136,10 @@ func parse(opts *parseOptions) {
 	// #nosec G306 -- G306 expects 0o600 or less but 0o644 is fine here as the
 	// metadata is not really sensitive (and is expected to be committed).
 	assert.Nil(os.WriteFile(opts.Out, rootMd.Encode(), 0o644))
-	fmt.Println("climate: (re)generated", opts.Out)
+	fmt.Println("cligen: (re)generated", opts.Out)
 }
 
-//go:generate go run github.com/avamsi/climate/cmd/climate --out=md.cli
+//go:generate go run github.com/avamsi/climate/cmd/cligen --out=md.cli
 //go:embed md.cli
 var md []byte
 

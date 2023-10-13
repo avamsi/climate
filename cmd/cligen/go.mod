@@ -1,4 +1,4 @@
-module github.com/avamsi/climate/cmd/climate
+module github.com/avamsi/climate/cmd/cligen
 
 go 1.20
 

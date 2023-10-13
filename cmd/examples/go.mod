@@ -4,13 +4,13 @@ go 1.20
 
 require (
 	github.com/avamsi/climate v0.0.0
-	github.com/avamsi/climate/cmd/climate v0.0.0
+	github.com/avamsi/climate/cmd/cligen v0.0.0
 	github.com/google/go-cmp v0.5.9
 )
 
 replace (
 	github.com/avamsi/climate v0.0.0 => ../..
-	github.com/avamsi/climate/cmd/climate v0.0.0 => ../climate
+	github.com/avamsi/climate/cmd/cligen v0.0.0 => ../cligen
 )
 
 require (
