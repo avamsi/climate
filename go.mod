@@ -3,13 +3,13 @@ module github.com/avamsi/climate
 go 1.20
 
 require (
-	github.com/avamsi/ergo v0.0.0-20230913052809-930ba920a5a0
+	github.com/avamsi/ergo v0.0.0-20231013073317-327353949369
 	github.com/google/go-cmp v0.5.9
 	github.com/gosuri/uitable v0.0.4
 	github.com/sanity-io/litter v1.5.5
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/mod v0.13.0
 	golang.org/x/text v0.13.0
 )
@@ -22,5 +22,5 @@ require (
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
-	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 )
