@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/avamsi/ergo v0.0.0-20231013073317-327353949369
-	github.com/google/go-cmp v0.5.9
+	github.com/google/go-cmp v0.6.0
 	github.com/gosuri/uitable v0.0.4
 	github.com/sanity-io/litter v1.5.5
 	github.com/spf13/cobra v1.7.0
