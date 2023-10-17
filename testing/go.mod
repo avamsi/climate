@@ -3,8 +3,8 @@ module github.com/avamsi/climate/testing
 go 1.20
 
 require (
-	github.com/avamsi/climate v0.0.0-20231013095157-1a63f483d4ef
-	github.com/avamsi/ergo v0.0.0-20231013073317-327353949369
+	github.com/avamsi/climate v0.0.0-20231013155718-9cc1abea4dcd
+	github.com/avamsi/ergo v0.0.0-20231016191401-d5d3a5a058ff
 )
 
 require (
@@ -12,7 +12,7 @@ require (
 	github.com/gosuri/uitable v0.0.4 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/sanity-io/litter v1.5.5 // indirect
