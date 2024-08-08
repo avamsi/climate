@@ -12,3 +12,6 @@ updates:
       interval: weekly
     commit-message:
       prefix: gomod
+    groups:
+      all:
+        patterns: ['*']
