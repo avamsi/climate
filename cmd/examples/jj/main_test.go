@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"testing"
 
 	"github.com/avamsi/climate"
@@ -16,7 +17,7 @@ func TestMain(t *testing.T) {
 		want string
 	}{
 		{
-			name: "jj --help",
+			name: "jj--help",
 			args: []string{"--help"},
 			want: `Jujutsu (an experimental VCS).
 
@@ -40,7 +41,7 @@ Use "jj [command] --help" for more information about a command.
 `,
 		},
 		{
-			name: "jj git --help",
+			name: "jj-git--help",
 			args: []string{"git", "--help"},
 			want: `Commands for working with the underlying Git repo.
 
@@ -68,11 +69,14 @@ Use "jj git [command] --help" for more information about a command.
 	)
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := jj(test.args).Stdout
+			// TODO(golang/go#36532): replace with t.Context().
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			got := jj(ctx, test.args).Stdout
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("want:\n%v", test.want)
 				t.Errorf("got:\n%v", got)
-				t.Errorf("diff(-want +got):%v", diff)
+				t.Errorf("diff(-want +got):\n%v", diff)
 			}
 		})
 	}

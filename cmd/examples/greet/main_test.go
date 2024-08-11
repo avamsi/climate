@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"testing"
 
 	"github.com/avamsi/climate"
@@ -22,11 +23,14 @@ Flags:
   -t, --times    int                     number of times to greet
   -h, --help                             help for greet
 `
-		got = greet([]string{"--help"}).Stdout
 	)
+	// TODO(golang/go#36532): replace with t.Context().
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	got := greet(ctx, []string{"--help"}).Stdout
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("want:\n%v", want)
 		t.Errorf("got:\n%v", got)
-		t.Errorf("diff(-want +got):%v", diff)
+		t.Errorf("diff(-want +got):\n%v", diff)
 	}
 }

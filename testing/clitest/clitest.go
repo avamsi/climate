@@ -16,11 +16,10 @@ type Got struct {
 	Code           int
 }
 
-type TestCLI func(args []string) Got
+type TestCLI func(ctx context.Context, args []string) Got
 
 func New(p internal.Plan, mods ...func(*internal.RunOptions)) TestCLI {
-	ctx := context.Background()
-	return func(args []string) Got {
+	return func(ctx context.Context, args []string) Got {
 		var (
 			// TODO: do these pipes have enough capacity?
 			stdoutR, stdoutW, err1 = os.Pipe()
