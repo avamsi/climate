@@ -18,8 +18,8 @@ Usage:
   greet [opts]
 
 Flags:
-  -g, --greeting string (default Hello)  greeting to use         
-  -n, --name     string (default World)  name to greet           
+  -g, --greeting string (default Hello)  greeting to use
+  -n, --name     string (default World)  name to greet
   -t, --times    int                     number of times to greet
   -h, --help                             help for greet
 `

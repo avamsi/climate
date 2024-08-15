@@ -33,7 +33,7 @@ Available Commands:
   util        Infrequently used commands such as for generating shell completions
 
 Flags:
-  -R, --repository          path  path to the repo to operate on          
+  -R, --repository          path  path to the repo to operate on
       --ignore-working-copy       don't snapshot / update the working copy
   -h, --help                      help for jj
 

@@ -7,10 +7,10 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/avamsi/ergo/assert"
-	"github.com/gosuri/uitable"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"golang.org/x/mod/module"
@@ -74,12 +74,10 @@ func version() string {
 }
 
 func flagUsages(fset *pflag.FlagSet) string {
-	t := uitable.New()
-	t.Separator = ""
-	t.MaxColWidth = 80
-	t.Wrap = true
-	// TODO: is this leaving extra spaces at the end of certain rows?
-	// See cmd/examples/{greet,jj}/main_test.go for some examples.
+	var (
+		b strings.Builder
+		t = tabwriter.NewWriter(&b, 0, 0, 0, ' ', 0)
+	)
 	fset.VisitAll(func(f *pflag.Flag) {
 		var short string
 		if f.Shorthand != "" {
@@ -95,9 +93,10 @@ func flagUsages(fset *pflag.FlagSet) string {
 		if _, ok := f.Annotations[nonZeroDefault]; ok {
 			value = fmt.Sprintf("(default %v) ", f.DefValue)
 		}
-		t.AddRow("  ", short, "--", f.Name, " ", qtype, value, " ", usage)
+		fmt.Fprintf(t, "  %v\t--%v\t %v\t%v \t%v\n", short, f.Name, qtype, value, usage)
 	})
-	return t.String()
+	t.Flush()
+	return b.String()
 }
 
 func (cmd *command) run(ctx context.Context) error {
@@ -111,7 +110,7 @@ func (cmd *command) run(ctx context.Context) error {
 		// Add the version subcommand only when the root command already has
 		// subcommands (similar to how Cobra does it for help / completion).
 		if cmd.delegate.HasSubCommands() {
-			help := fmt.Sprintf("Display %s's version information", cmd.delegate.Name())
+			help := fmt.Sprintf("Display %v's version information", cmd.delegate.Name())
 			cmd.delegate.AddCommand(&cobra.Command{
 				Use:   "version",
 				Short: help,
