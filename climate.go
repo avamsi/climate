@@ -7,6 +7,7 @@ package climate
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"reflect"
@@ -64,14 +65,12 @@ func exitCode(err error) int {
 	if err == nil { // if _no_ error
 		return 0
 	}
-	switch err := err.(type) {
-	case *exitError:
-		return err.code
-	case *exec.ExitError:
-		return err.ExitCode()
-	default:
-		return 1
+	if eerr := new(exitError); errors.As(err, &eerr) {
+		return eerr.code
+	} else if eerr := new(exec.ExitError); errors.As(err, &eerr) {
+		return eerr.ExitCode()
 	}
+	return 1
 }
 
 // WithMetadata returns a modifier that sets the metadata to be used by Run for

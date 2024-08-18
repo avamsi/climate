@@ -2,6 +2,7 @@ package climate
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"runtime/debug"
@@ -173,11 +174,11 @@ func (fcb *funcCommandBuilder) run(sig *runSignature) func(*cobra.Command, []str
 		}
 		out := fcb.v().Call(in)
 		if sig.outErr {
-			err := out[0].Interface()
-			if err == nil { // if _no_ error
+			if out[0].IsNil() { // if _no_ error
 				return nil
 			}
-			if err, ok := err.(*usageError); ok {
+			err := out[0].Interface().(error)
+			if uerr := new(usageError); errors.As(err, &uerr) {
 				// Let Cobra print both the error and usage information.
 				return err
 			}
@@ -186,10 +187,10 @@ func (fcb *funcCommandBuilder) run(sig *runSignature) func(*cobra.Command, []str
 			cmd.SilenceUsage = true
 			// exitError may just be used to exit with a particular exit code
 			// and not necessarily have anything to print.
-			if err, ok := err.(*exitError); ok && len(err.errs) == 0 {
-				cmd.SilenceErrors = true
+			if eerr := new(exitError); errors.As(err, &eerr) {
+				cmd.SilenceErrors = len(eerr.errs) == 0
 			}
-			return err.(error)
+			return err
 		}
 		return nil
 	}
