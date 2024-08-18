@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"reflect"
 
+	"github.com/avamsi/ergo"
 	"github.com/avamsi/ergo/assert"
 
 	"github.com/avamsi/climate/internal"
@@ -48,7 +49,7 @@ func Struct[T any](subcommands ...*structPlan) *structPlan {
 		for i := 0; i < n; i++ {
 			ms[i] = t.Method(i).Name
 		}
-		internal.Panicf("nonzero methods %v on: %v", ms, t)
+		ergo.Panicf("nonzero methods %v on: %v", ms, t)
 	}
 	assert.Truef(ptr.NumMethod() > 0, "no methods on: %v", ptr)
 	return &structPlan{

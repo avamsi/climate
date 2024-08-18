@@ -10,6 +10,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/avamsi/ergo"
 	"github.com/avamsi/ergo/assert"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -255,7 +256,7 @@ func (fcb *funcCommandBuilder) build() *command {
 	}
 	outErr := fcb.t().NumOut() == 1 && typeIsError(fcb.t().Out(0))
 	if i != n || fcb.t().IsVariadic() || (fcb.t().NumOut() != 0 && !outErr) {
-		internal.Panicf("not func([context.Context], [*struct], [[]string]) [error]: %v", fcb.t())
+		ergo.Panicf("not func([context.Context], [*struct], [[]string]) [error]: %v", fcb.t())
 	}
 	cmd.delegate.RunE = fcb.run(&runSignature{n, inCtx, inOpts, inArgs, outErr})
 	return cmd

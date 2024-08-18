@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/avamsi/ergo"
 	"github.com/avamsi/ergo/assert"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -141,13 +142,13 @@ func (opt *option) declare() bool {
 				sliceParser(parseString),
 			)
 		default:
-			internal.Panicf("not []bool | []Signed | []Float | []string: %v", e)
+			ergo.Panicf("not []bool | []Signed | []Float | []string: %v", e)
 		}
 	default:
 		if typeIsStructPointer(opt.t) {
 			return false
 		}
-		internal.Panicf("not bool | Integer | Float | string | []T: %v", opt.t)
+		ergo.Panicf("not bool | Integer | Float | string | []T: %v", opt.t)
 	}
 	return true
 }
@@ -185,15 +186,15 @@ func (opts *options) declare() {
 		)
 		if !opt.declare() {
 			if opts.parent == nil {
-				internal.Panicf("not bool | Integer | Float | string | []T: %v", f.Type)
+				ergo.Panicf("not bool | Integer | Float | string | []T: %v", f.Type)
 			}
 			if f.Type != opts.parent.ptr.t() {
-				internal.Panicf(
+				ergo.Panicf(
 					"not bool | Integer | Float | string | []T | %v: %v",
 					opts.parent.t(), f.Type)
 			}
 			if parentSet {
-				internal.Panicf("more than one parent: %v", f.Type)
+				ergo.Panicf("more than one parent: %v", f.Type)
 			}
 			v.Set(*opts.parent.ptr.v())
 		}
