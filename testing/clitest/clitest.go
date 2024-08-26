@@ -11,15 +11,15 @@ import (
 	"github.com/avamsi/ergo/assert"
 )
 
-type Got struct {
+type Result struct {
 	Stdout, Stderr string
 	Code           int
 }
 
-type TestCLI func(ctx context.Context, args []string) Got
+type TestCLI func(ctx context.Context, args []string) Result
 
 func New(p internal.Plan, mods ...func(*internal.RunOptions)) TestCLI {
-	return func(ctx context.Context, args []string) Got {
+	return func(ctx context.Context, args []string) Result {
 		var (
 			// TODO: do these pipes have enough capacity?
 			stdoutR, stdoutW, err1 = os.Pipe()
@@ -36,7 +36,7 @@ func New(p internal.Plan, mods ...func(*internal.RunOptions)) TestCLI {
 		}()
 		code := climate.Run(ctx, p, mods...)
 		assert.Nil(errors.Join(stdoutW.Close(), stderrW.Close()))
-		return Got{
+		return Result{
 			Stdout: string(assert.Ok(io.ReadAll(stdoutR))),
 			Stderr: string(assert.Ok(io.ReadAll(stderrR))),
 			Code:   code,

@@ -14,12 +14,13 @@ func TestMain(t *testing.T) {
 	tests := []struct {
 		name string
 		args []string
-		want string
+		want clitest.Result
 	}{
 		{
-			name: "jj--help",
-			args: []string{"--help"},
-			want: `Jujutsu (an experimental VCS).
+			name: "jj",
+			args: nil,
+			want: clitest.Result{
+				Stdout: `Jujutsu (an experimental VCS).
 
 Usage:
   jj [command]
@@ -39,11 +40,39 @@ Flags:
 
 Use "jj [command] --help" for more information about a command.
 `,
+			},
+		},
+		{
+			name: "jj--help",
+			args: []string{"--help"},
+			want: clitest.Result{
+				Stdout: `Jujutsu (an experimental VCS).
+
+Usage:
+  jj [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  git         Commands for working with the underlying Git repo
+  help        Help about any command
+  init        Create a new repo in the given directory
+  squash      Move changes from a revision into its parent
+  util        Infrequently used commands such as for generating shell completions
+
+Flags:
+  -R, --repository          path  path to the repo to operate on
+      --ignore-working-copy       don't snapshot / update the working copy
+  -h, --help                      help for jj
+
+Use "jj [command] --help" for more information about a command.
+`,
+			},
 		},
 		{
 			name: "jj-git--help",
 			args: []string{"git", "--help"},
-			want: `Commands for working with the underlying Git repo.
+			want: clitest.Result{
+				Stdout: `Commands for working with the underlying Git repo.
 
 Usage:
   jj git [command]
@@ -61,6 +90,31 @@ Global Flags:
 
 Use "jj git [command] --help" for more information about a command.
 `,
+			},
+		},
+		{
+			name: "jj-git-exp",
+			args: []string{"git", "exp"},
+			want: clitest.Result{
+				Stderr: `Error: unknown command "exp" for "jj git"
+
+Did you mean this?
+	export
+
+Run 'jj git --help' for usage.
+`,
+				Code: 1,
+			},
+		},
+		{
+			name: "jj-git-x",
+			args: []string{"git", "x"},
+			want: clitest.Result{
+				Stderr: `Error: unknown command "x" for "jj git"
+Run 'jj git --help' for usage.
+`,
+				Code: 1,
+			},
 		},
 	}
 	var (
@@ -72,7 +126,7 @@ Use "jj git [command] --help" for more information about a command.
 			// TODO(golang/go#36532): replace with t.Context().
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
-			got := jj(ctx, test.args).Stdout
+			got := jj(ctx, test.args)
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("want:\n%v", test.want)
 				t.Errorf("got:\n%v", got)

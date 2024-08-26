@@ -107,6 +107,7 @@ func versionCommand(name, v string) *cobra.Command {
 		Use:   "version",
 		Short: help,
 		Long:  help + ".",
+		Args:  cobra.ExactArgs(0),
 		Run: func(cmd *cobra.Command, _ []string) {
 			cmd.Println(v)
 		},
@@ -273,6 +274,24 @@ type structCommandBuilder struct {
 	md     *internal.Metadata
 }
 
+func validateNoArgs(cmd *cobra.Command, args []string) error {
+	cmd.SilenceUsage = true
+	err := cobra.NoArgs(cmd, args)
+	if err == nil { // if _no_ error
+		return cmd.Help()
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "%v", err)
+	if suggestions := cmd.SuggestionsFor(args[0]); len(suggestions) > 0 {
+		b.WriteString("\n\nDid you mean this?\n")
+		for _, s := range suggestions {
+			fmt.Fprintf(&b, "\t%v\n", s)
+		}
+	}
+	fmt.Fprintf(&b, "\nRun '%v --help' for usage.", cmd.CommandPath())
+	return errors.New(b.String())
+}
+
 func (scb *structCommandBuilder) build() *command {
 	var (
 		cmd  = newCommand(scb.t().Name(), scb.md, nil)
@@ -297,5 +316,23 @@ func (scb *structCommandBuilder) build() *command {
 		// TODO: maybe provide an option to default to a subcommand.
 		cmd.addCommand(fcb.build())
 	}
+	// This should ideally be as simple as setting cobra.NoArgs, but for
+	// whatever reason, Cobra doesn't really honor that for subcommands
+	// (see spf13/cobra#706, spf13/cobra#981) -- so, we do it ourselves.
+	cmd.delegate.RunE = validateNoArgs
+	// We only make this command "runnable" to validate NoArgs, so hack the
+	// usage template and pretend it's not really runnable.
+	// Note: Cobra subcommands will inherit any custom attributes set on the
+	// parent command, so we need to be careful here to only apply the changes
+	// to the parent command and not any subcommands.
+	defaultHelpFunc := cmd.delegate.HelpFunc()
+	cmd.delegate.SetHelpFunc(func(c *cobra.Command, _ []string) {
+		if c == &cmd.delegate {
+			t := cmd.delegate.UsageTemplate()
+			t = strings.ReplaceAll(t, "{{if .Runnable}}", "{{if false}}")
+			c.SetUsageTemplate(t)
+		}
+		defaultHelpFunc(c, nil)
+	})
 	return cmd
 }
