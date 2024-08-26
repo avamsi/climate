@@ -101,6 +101,18 @@ func flagUsages(fset *pflag.FlagSet) string {
 	return b.String()
 }
 
+func versionCommand(name, v string) *cobra.Command {
+	help := fmt.Sprintf("Display %v's version information", name)
+	return &cobra.Command{
+		Use:   "version",
+		Short: help,
+		Long:  help + ".",
+		Run: func(cmd *cobra.Command, _ []string) {
+			cmd.Println(v)
+		},
+	}
+}
+
 func (cmd *command) run(ctx context.Context) error {
 	normalize := func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
 		return pflag.NormalizedName(internal.NormalizeToKebabCase(name))
@@ -112,17 +124,9 @@ func (cmd *command) run(ctx context.Context) error {
 		// Add the version subcommand only when the root command already has
 		// subcommands (similar to how Cobra does it for help / completion).
 		if cmd.delegate.HasSubCommands() {
-			help := fmt.Sprintf("Display %v's version information", cmd.delegate.Name())
-			cmd.delegate.AddCommand(&cobra.Command{
-				Use:   "version",
-				Short: help,
-				Long:  help + ".",
-				Run: func(*cobra.Command, []string) {
-					fmt.Println(version())
-				},
-			})
+			cmd.delegate.AddCommand(versionCommand(cmd.delegate.Name(), v))
 		}
-		cmd.delegate.Version = version()
+		cmd.delegate.Version = v
 	}
 	// Align the flag usages as a table (pflag's FlagUsages already does this to
 	// some extent but doesn't align types and default values).
