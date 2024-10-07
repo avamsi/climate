@@ -8,7 +8,7 @@ require (
 	github.com/avamsi/climate v0.0.0-20240815045519-590e95e0c4fe
 	github.com/avamsi/ergo v0.0.0-20240814022523-bd3d9ec1a8ba
 	github.com/sanity-io/litter v1.5.5
-	golang.org/x/tools v0.25.0
+	golang.org/x/tools v0.26.0
 )
 
 require (
