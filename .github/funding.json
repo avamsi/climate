@@ -1,0 +1,108 @@
+{
+	"version": "v1.0.0",
+	"entity": {
+		"type": "individual",
+		"role": "owner",
+		"name": "Vamsi Avula",
+		"email": "avamsi07@gmail.com",
+		"phone": "",
+		"description": "Python fanboy",
+		"webpageUrl": {
+			"url": "https://github.com/avamsi",
+			"wellKnown": ""
+		}
+	},
+	"projects": [
+		{
+			"guid": "climate",
+			"name": "CLI Mate",
+			"description": "CLI Mate autogenerates CLIs from structs / functions (nested subcommands, global / local flags, help generation, typo suggestions, shell completion etc.)",
+			"webpageUrl": {
+				"url": "https://github.com/avamsi/climate",
+				"wellKnown": ""
+			},
+			"repositoryUrl": {
+				"url": "https://github.com/avamsi/climate",
+				"wellKnown": ""
+			},
+			"licenses": [
+				"unlicense"
+			],
+			"tags": [
+				"cli",
+				"golang",
+				"library"
+			]
+		}
+	],
+	"funding": {
+		"channels": [
+			{
+				"guid": "github-sponsors",
+				"type": "payment-provider",
+				"address": "https://github.com/sponsors/avamsi",
+				"description": ""
+			},
+			{
+				"guid": "paypal",
+				"type": "payment-provider",
+				"address": "https://paypal.me/avamsi07",
+				"description": ""
+			}
+		],
+		"plans": [
+			{
+				"guid": "im-feeling-lucky",
+				"status": "active",
+				"name": "I'm Feeling Lucky",
+				"description": "",
+				"amount": 0,
+				"currency": "USD",
+				"frequency": "monthly",
+				"channels": [
+					"github-sponsors",
+					"paypal"
+				]
+			},
+			{
+				"guid": "20-project",
+				"status": "active",
+				"name": "20% Project",
+				"description": "",
+				"amount": 40000,
+				"currency": "USD",
+				"frequency": "yearly",
+				"channels": [
+					"github-sponsors",
+					"paypal"
+				]
+			}
+		],
+		"history": [
+			{
+				"year": 2024,
+				"income": 250,
+				"expenses": 20000,
+				"taxes": 0,
+				"currency": "USD",
+				"description": ""
+			},
+			{
+				"year": 2023,
+				"income": 0,
+				"expenses": 40000,
+				"taxes": 0,
+				"currency": "USD",
+				"description": ""
+			},
+			{
+				"year": 2022,
+				"income": 0,
+				"expenses": 20000,
+				"taxes": 0,
+				"currency": "USD",
+				"description": ""
+			}
+		]
+	}
+}
