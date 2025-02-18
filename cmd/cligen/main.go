@@ -148,7 +148,7 @@ func parse(opts *parseOptions) {
 	fmt.Println("cligen: (re)generated", opts.Out)
 }
 
-//go:generate go run github.com/avamsi/climate/cmd/cligen --out=md.cli
+//go:generate go tool cligen --out=md.cli
 //go:embed md.cli
 var md []byte
 

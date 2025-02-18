@@ -45,7 +45,7 @@ func greet(opts *greetOptions) {
 
 // * These only work if you generate and pass along "metadata" like below --
 
-//go:generate go run github.com/avamsi/climate/cmd/cligen --out=md.cli
+//go:generate go tool cligen --out=md.cli
 //go:embed md.cli
 var md []byte
 
