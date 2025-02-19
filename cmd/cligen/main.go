@@ -95,16 +95,13 @@ func pkgDir(pkg *packages.Package) string {
 	return ""
 }
 
-type parseOptions struct {
-	Out   string // output file to write metadata to
-	Debug bool   // whether to print metadata
+type options struct {
+	Debug bool // whether to print metadata
 }
 
 // cligen recursively parses the metadata of all Go packages in the current
 // directory and its subdirectories, and writes it to the given output file.
-//
-//cli:usage cligen [opts]
-func parse(opts *parseOptions) {
+func cligen(opts *options, out string) {
 	var (
 		rootMd internal.RawMetadata
 		mode   = (packages.NeedName | packages.NeedFiles |
@@ -134,7 +131,7 @@ func parse(opts *parseOptions) {
 	// invocation even if nothing about the metadata actually changed, which is
 	// not ideal (causes VCS noise, for example). To avoid this, we compare the
 	// new metadata with the old one and write only if they are different.
-	oldEncoded, err := os.ReadFile(opts.Out)
+	oldEncoded, err := os.ReadFile(out)
 	if !errors.Is(err, fs.ErrNotExist) { // if exists
 		assert.Nil(err)
 		oldDecoded := internal.DecodeAsRawMetadata(oldEncoded)
@@ -144,14 +141,14 @@ func parse(opts *parseOptions) {
 	}
 	// #nosec G306 -- G306 expects 0o600 or less but 0o644 is fine here as the
 	// metadata is not really sensitive (and is expected to be committed).
-	assert.Nil(os.WriteFile(opts.Out, rootMd.Encode(), 0o644))
-	fmt.Println("cligen: (re)generated", opts.Out)
+	assert.Nil(os.WriteFile(out, rootMd.Encode(), 0o644))
+	fmt.Println("cligen: (re)generated", out)
 }
 
-//go:generate go tool cligen --out=md.cli
+//go:generate go tool cligen md.cli
 //go:embed md.cli
 var md []byte
 
 func main() {
-	climate.RunAndExit(climate.Func(parse), climate.WithMetadata(md))
+	climate.RunAndExit(climate.Func(cligen), climate.WithMetadata(md))
 }

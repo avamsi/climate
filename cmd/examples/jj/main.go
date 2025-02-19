@@ -66,7 +66,7 @@ func (g *git) Export() {
 	fmt.Println("export", g.J)
 }
 
-//go:generate go tool cligen --out=md.cli
+//go:generate go tool cligen md.cli
 //go:embed md.cli
 var md []byte
 
