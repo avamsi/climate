@@ -5,13 +5,13 @@ import (
 	"reflect"
 )
 
-var contextType = reflect.TypeOf((*context.Context)(nil)).Elem()
+var contextType = reflect.TypeFor[context.Context]()
 
 func typeIsContext(t reflect.Type) bool {
 	return t.Kind() == reflect.Interface && t.Implements(contextType)
 }
 
-var errorType = reflect.TypeOf((*error)(nil)).Elem()
+var errorType = reflect.TypeFor[error]()
 
 func typeIsError(t reflect.Type) bool {
 	return t.Kind() == reflect.Interface && t.Implements(errorType)

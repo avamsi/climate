@@ -40,10 +40,7 @@ var _ internal.Plan = (*funcPlan)(nil)
 // * Only methods with pointer receiver are considered (and they must otherwise
 // conform to the same signatures described in Func).
 func Struct[T any](subcommands ...*structPlan) *structPlan {
-	var (
-		ptr = reflect.TypeOf((*T)(nil))
-		t   = ptr.Elem()
-	)
+	t := reflect.TypeFor[T]()
 	assert.Truef(t.Kind() == reflect.Struct, "not a struct: %v", t)
 	if n := t.NumMethod(); n > 0 {
 		ms := make([]string, n)
@@ -52,6 +49,7 @@ func Struct[T any](subcommands ...*structPlan) *structPlan {
 		}
 		ergo.Panicf("nonzero methods %v on: %v", ms, t)
 	}
+	ptr := reflect.PointerTo(t)
 	assert.Truef(ptr.NumMethod() > 0, "no methods on: %v", ptr)
 	return &structPlan{
 		reflection{ptr: &reflection{ot: ptr}, ot: t},
