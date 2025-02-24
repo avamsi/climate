@@ -5,7 +5,7 @@ go 1.24
 require (
 	github.com/avamsi/climate v0.0.0
 	github.com/avamsi/climate/testing v0.0.0
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 )
 
 tool github.com/avamsi/climate/cmd/cligen
