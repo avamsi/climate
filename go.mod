@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/avamsi/ergo v0.0.0-20250210165756-c19aaccc8346
-	github.com/google/go-cmp v0.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/sanity-io/litter v1.5.8
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
