@@ -15,6 +15,6 @@ require (
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
-	golang.org/x/mod v0.23.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/mod v0.24.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 )
