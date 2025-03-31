@@ -13,5 +13,5 @@ updates:
     commit-message:
       prefix: gomod
     groups:
-      '*':
+      all:
         patterns: ['*']
