@@ -1,16 +1,16 @@
 module github.com/avamsi/climate
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/avamsi/ergo v0.0.0-20250210165756-c19aaccc8346
 	github.com/google/go-cmp v0.7.0
 	github.com/sanity-io/litter v1.5.8
-	github.com/spf13/cobra v1.9.1
-	github.com/spf13/pflag v1.0.7
+	github.com/spf13/cobra v1.10.1
+	github.com/spf13/pflag v1.0.9
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
-	golang.org/x/mod v0.27.0
-	golang.org/x/text v0.28.0
+	golang.org/x/mod v0.28.0
+	golang.org/x/text v0.29.0
 )
 
 require (
