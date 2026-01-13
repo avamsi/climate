@@ -9,8 +9,8 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
-	golang.org/x/mod v0.31.0
-	golang.org/x/text v0.32.0
+	golang.org/x/mod v0.32.0
+	golang.org/x/text v0.33.0
 )
 
 require (
